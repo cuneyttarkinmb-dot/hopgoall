@@ -1,199 +1,181 @@
 const $ = (s) => document.querySelector(s);
 
 const state = {
-  streams: [],
-  categories: [],
+  all: [],
+  tab: "match", // match | channel
   onlyLive: true,
+  activeId: null,
 };
 
-function uniq(arr) {
-  return [...new Set(arr)].filter(Boolean);
-}
-
-function safeText(s) {
-  return String(s ?? "").trim();
-}
+function safeText(s){ return String(s ?? "").trim(); }
+function uniq(arr){ return [...new Set(arr)].filter(Boolean); }
 
 function twitchEmbedUrl(channel) {
-  // Twitch embed "parent" param ister. Biz de dinamik olarak hostname kullanıyoruz.
   const parent = encodeURIComponent(location.hostname);
   return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${parent}&autoplay=true`;
 }
 
 function buildEmbedUrl(item) {
-  if (item.provider === "youtube") return item.youtubeEmbedUrl;
-  if (item.provider === "twitch") return twitchEmbedUrl(item.twitchChannel);
+  if (item.provider === "youtube") return item.youtubeEmbedUrl || "";
+  if (item.provider === "twitch") return item.twitchChannel ? twitchEmbedUrl(item.twitchChannel) : "";
   return item.embedUrl || "";
 }
 
-function renderCategories() {
-  const sel = $("#cat");
-  sel.innerHTML = `<option value="all">Tüm kategoriler</option>`;
-  state.categories.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    sel.appendChild(opt);
-  });
+function normalize(item){
+  // kind: "match" | "channel"  (yoksa channel say)
+  const kind = safeText(item.kind || item.type || "channel");
+  return {
+    ...item,
+    kind: (kind === "match" ? "match" : "channel"),
+    title: safeText(item.title),
+    category: safeText(item.category || "Other"),
+    league: safeText(item.league || ""),      // maçlar için opsiyonel
+    time: safeText(item.time || ""),          // maçlar için opsiyonel (örn: 16:00)
+    isLive: !!item.isLive,
+    sourceUrl: safeText(item.sourceUrl || ""),
+  };
 }
 
-function card(item) {
-  const title = safeText(item.title);
-  const category = safeText(item.category || "Other");
-  const provider = safeText(item.provider || "embed");
-  const tags = Array.isArray(item.tags) ? item.tags : [];
-  const isLive = !!item.isLive;
-
-  const el = document.createElement("article");
-  el.className = "card";
-
-  const badges = document.createElement("div");
-  badges.className = "badges";
-
-  const b1 = document.createElement("span");
-  b1.className = "badge";
-  b1.textContent = category;
-  badges.appendChild(b1);
-
-  const b2 = document.createElement("span");
-  b2.className = "badge";
-  b2.textContent = provider.toUpperCase();
-  badges.appendChild(b2);
-
-  if (isLive) {
-    const bl = document.createElement("span");
-    bl.className = "badge live";
-    bl.textContent = "● CANLI";
-    badges.appendChild(bl);
-  }
-
-  const h = document.createElement("h3");
-  h.className = "title";
-  h.textContent = title;
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.textContent = tags.length ? `Etiketler: ${tags.join(", ")}` : " ";
-
-  const row = document.createElement("div");
-  row.className = "row";
-
-  const btn = document.createElement("button");
-  btn.className = "btn";
-  btn.type = "button";
-  btn.textContent = "▶ İzle";
-  btn.onclick = () => openPlayer(item);
-
-  const src = document.createElement("a");
-  src.className = "btn";
-  src.href = item.sourceUrl || "#";
-  src.target = "_blank";
-  src.rel = "noreferrer";
-  src.textContent = "↗ Kaynak";
-  if (!item.sourceUrl) {
-    src.style.opacity = ".5";
-    src.style.pointerEvents = "none";
-  }
-
-  row.appendChild(btn);
-  row.appendChild(src);
-
-  el.appendChild(badges);
-  el.appendChild(h);
-  el.appendChild(meta);
-  el.appendChild(row);
-
-  return el;
-}
-
-function applyFilters() {
+function filteredList(){
   const q = safeText($("#q").value).toLowerCase();
-  const cat = $("#cat").value;
-  const onlyLive = state.onlyLive;
+  let list = state.all.filter(x => x.kind === state.tab);
 
-  let filtered = state.streams.slice();
+  if (state.onlyLive) list = list.filter(x => x.isLive);
 
-  if (onlyLive) filtered = filtered.filter((s) => !!s.isLive);
-  if (cat !== "all") filtered = filtered.filter((s) => (s.category || "Other") === cat);
-
-  if (q) {
-    filtered = filtered.filter((s) => {
-      const t = safeText(s.title).toLowerCase();
-      const c = safeText(s.category).toLowerCase();
-      const tags = (Array.isArray(s.tags) ? s.tags.join(" ") : "").toLowerCase();
-      return t.includes(q) || c.includes(q) || tags.includes(q);
+  if (q){
+    list = list.filter(x => {
+      const blob = [
+        x.title, x.category, x.league, x.time,
+        Array.isArray(x.tags) ? x.tags.join(" ") : ""
+      ].join(" ").toLowerCase();
+      return blob.includes(q);
     });
   }
 
-  const grid = $("#grid");
-  grid.innerHTML = "";
-  filtered.forEach((s) => grid.appendChild(card(s)));
-
-  $("#empty").classList.toggle("hidden", filtered.length !== 0);
+  return list;
 }
 
-function openPlayer(item) {
-  const url = buildEmbedUrl(item);
-  const frame = $("#frame");
+function setActive(item){
+  state.activeId = item.id;
 
-  $("#mTitle").textContent = safeText(item.title);
-  $("#mMeta").textContent = `${safeText(item.category || "Other")} • ${safeText(item.provider || "embed").toUpperCase()}`;
+  // UI
+  $("#pTitle").textContent = item.title || "Yayın";
+  const metaBits = [item.category];
+  if (item.league) metaBits.push(item.league);
+  if (item.time) metaBits.push(item.time);
+  $("#pMeta").textContent = metaBits.filter(Boolean).join(" • ");
 
-  $("#openSource").href = item.sourceUrl || url || "#";
-  $("#openSource").style.opacity = (item.sourceUrl || url) ? "1" : ".5";
-  $("#openSource").style.pointerEvents = (item.sourceUrl || url) ? "auto" : "none";
+  const src = buildEmbedUrl(item);
+  $("#player").src = src || "about:blank";
 
-  // iframe src set
-  frame.src = url || "about:blank";
+  const btn = $("#btnSource");
+  btn.href = item.sourceUrl || src || "#";
+  btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
+  btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
 
-  $("#modal").classList.remove("hidden");
+  render(); // active highlight
 }
 
-function closePlayer() {
-  $("#modal").classList.add("hidden");
-  // stop playback
-  $("#frame").src = "about:blank";
+function render(){
+  const list = filteredList();
+  const root = $("#list");
+  root.innerHTML = "";
+
+  list.forEach(item => {
+    const el = document.createElement("div");
+    el.className = "item" + (item.id === state.activeId ? " active" : "");
+    el.onclick = () => setActive(item);
+
+    const left = document.createElement("div");
+    left.className = "item-left";
+    const title = document.createElement("b");
+    title.textContent = item.title || "Yayın";
+
+    const sub = document.createElement("small");
+    const subParts = uniq([item.league || "", item.category || ""]);
+    sub.textContent = subParts.filter(Boolean).join(" | ") || " ";
+
+    left.appendChild(title);
+    left.appendChild(sub);
+
+    const right = document.createElement("div");
+    right.className = "item-right";
+
+    if (item.time){
+      const t = document.createElement("div");
+      t.className = "time";
+      t.textContent = item.time;
+      right.appendChild(t);
+    }
+
+    const pill = document.createElement("div");
+    pill.className = "pill" + (item.isLive ? " live" : "");
+    pill.textContent = item.isLive ? "CANLI" : "OFFLINE";
+    right.appendChild(pill);
+
+    el.appendChild(left);
+    el.appendChild(right);
+    root.appendChild(el);
+  });
+
+  $("#empty").classList.toggle("hidden", list.length !== 0);
 }
 
-async function load() {
+function setTab(tab){
+  state.tab = tab;
+
+  $("#tabMatches").classList.toggle("active", tab === "match");
+  $("#tabChannels").classList.toggle("active", tab === "channel");
+
+  // tab değişince aktif seçimi korumuyorsa kapat
+  const list = filteredList();
+  if (!list.some(x => x.id === state.activeId)){
+    state.activeId = null;
+    $("#player").src = "about:blank";
+    $("#pTitle").textContent = "Bir yayın seç";
+    $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
+  }
+
+  render();
+}
+
+async function load(){
   const res = await fetch("./streams.json", { cache: "no-store" });
   const data = await res.json();
+  state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
 
-  state.streams = Array.isArray(data.streams) ? data.streams : [];
-  state.categories = uniq(state.streams.map((s) => s.category || "Other")).sort();
-
-  state.onlyLive = !!(data.site && data.site.defaultOnlyLive);
-
-  $("#onlyLive").setAttribute("aria-pressed", String(state.onlyLive));
-  renderCategories();
-  applyFilters();
+  // sayfa açılınca: maç tabı + ilk canlı varsa seç
+  setTab("match");
+  const first = filteredList()[0] || null;
+  if (first) setActive(first);
+  render();
 }
 
-function wire() {
-  $("#q").addEventListener("input", applyFilters);
-  $("#cat").addEventListener("change", applyFilters);
+function wire(){
+  $("#tabMatches").addEventListener("click", () => setTab("match"));
+  $("#tabChannels").addEventListener("click", () => setTab("channel"));
 
-  $("#onlyLive").addEventListener("click", () => {
-    state.onlyLive = !state.onlyLive;
-    $("#onlyLive").setAttribute("aria-pressed", String(state.onlyLive));
-    $("#onlyLive").textContent = state.onlyLive ? "Sadece canlı" : "Tümü";
-    applyFilters();
+  $("#q").addEventListener("input", render);
+
+  $("#onlyLive").addEventListener("change", (e) => {
+    state.onlyLive = !!e.target.checked;
+    render();
   });
 
-  $("#modalClose").addEventListener("click", closePlayer);
-  $("#modalX").addEventListener("click", closePlayer);
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePlayer();
+  $("#btnRefresh").addEventListener("click", () => {
+    const current = state.all.find(x => x.id === state.activeId);
+    if (!current) return;
+    const src = buildEmbedUrl(current);
+    $("#player").src = "about:blank";
+    setTimeout(() => { $("#player").src = src || "about:blank"; }, 80);
   });
 
-  $("#copyLink").addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(location.href);
-      $("#copyLink").textContent = "Kopyalandı ✅";
-      setTimeout(() => ($("#copyLink").textContent = "Sayfa linkini kopyala"), 1200);
-    } catch {
-      // ignore
-    }
+  $("#btnClear").addEventListener("click", () => {
+    state.activeId = null;
+    $("#player").src = "about:blank";
+    $("#pTitle").textContent = "Bir yayın seç";
+    $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
+    render();
   });
 }
 
@@ -201,4 +183,3 @@ wire();
 load().catch(() => {
   $("#empty").classList.remove("hidden");
 });
-
