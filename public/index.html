@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HopGoal Live</title>
+  <meta name="description" content="Sade, fütüristik canlı yayın portalı." />
+  <style>
+    :root{
+      --bg:#070a10;
+      --card:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.12);
+      --text:#eaf2ff;
+      --muted:rgba(234,242,255,.72);
+      --glow:#4de1ff;
+      --glow2:#a855f7;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(77,225,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 85% 15%, rgba(168,85,247,.16), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .wrap{
+      width:min(920px, 100%);
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:18px;
+      padding:26px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset;
+    }
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .dot{
+      width:14px; height:14px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.2) 25%, transparent 55%),
+        linear-gradient(90deg, var(--glow), var(--glow2));
+      box-shadow: 0 0 24px rgba(77,225,255,.35);
+    }
+    h1{margin:0; font-size:28px; letter-spacing:.4px}
+    p{margin:6px 0 0; color:var(--muted)}
+    .btns{display:flex; gap:10px; flex-wrap:wrap}
+    a.btn{
+      text-decoration:none; color:var(--text);
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.04);
+      padding:10px 14px; border-radius:12px;
+      transition:.2s ease;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    a.btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(77,225,255,.35);
+      box-shadow: 0 0 0 2px rgba(77,225,255,.08);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      margin-top:14px;
+    }
+    .card{
+      border:1px solid var(--stroke);
+      background: var(--card);
+      border-radius:16px;
+      padding:14px;
+      min-height:120px;
+    }
+    .card b{display:block; margin-bottom:6px}
+    .card span{color:var(--muted); font-size:14px}
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="dot"></div>
+        <div>
+          <h1>HopGoal Live</h1>
+          <p>Cloudflare Pages yayında. Sonraki adım: Live sayfası + yayın listesi.</p>
+        </div>
+      </div>
+      <div class="btns">
+        <a class="btn" href="./live.html">▶ Live sayfası</a>
+        <a class="btn" href="https://github.com/cuneyttarkinnmb-dot/hopgoal" target="_blank" rel="noreferrer">↗ Repo</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><b>✅ Ücretsiz domain</b><span>*.pages.dev otomatik gelir</span></div>
+      <div class="card"><b>✅ Tema/kod</b><span>HTML/CSS/JS istediğin gibi</span></div>
+      <div class="card"><b>✅ Yayın mantığı</b><span>YouTube/Twitch embed ile sıfır maliyet</span></div>
+    </div>
+  </div>
+</body>
+</html>
