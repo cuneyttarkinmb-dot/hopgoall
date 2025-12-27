@@ -66,13 +66,14 @@
       ]
     },
 
-    floating: {
-      label: "Floating",
-      showAfterMs: 2500,
-      creatives: [
-        { image: "/ads/floating-300x250.gif", clickUrl: "https://example.com/floating", alt: "Floating Ad" }
-      ]
-    },
+floating: {
+  label: "Bottom Dock",
+  showAfterMs: 1200,
+  creatives: [
+    { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/bottom1", alt: "Bottom Banner" },
+    { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/bottom2", alt: "Bottom Banner 2" }
+  ]
+},
 
     interstitial: {
       label: "Interstitial",
