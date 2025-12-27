@@ -1,1 +1,67 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HopGoal Live</title>
+  <meta name="description" content="Sade ve fütüristik canlı yayın portalı." />
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">
+      <span class="brand-dot"></span>
+      <span class="brand-text">
+        <b>HopGoal Live</b>
+        <small>Fütüristik yayın portalı</small>
+      </span>
+    </a>
+
+    <div class="controls">
+      <input id="q" class="input" placeholder="Yayın ara… (başlık / kategori)" autocomplete="off" />
+      <select id="cat" class="select">
+        <option value="all">Tüm kategoriler</option>
+      </select>
+      <button id="onlyLive" class="btn" type="button" aria-pressed="true">Sadece canlı</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Canlı Yayınlar</h1>
+      <p>Yayınları <span class="kbd">streams.json</span> dosyasından yönetiyorsun. Yeni yayın ekle/çıkar → commit → otomatik güncellenir.</p>
+    </section>
+
+    <section id="grid" class="grid"></section>
+
+    <section id="empty" class="empty hidden">
+      <h2>Sonuç yok</h2>
+      <p>Arama/filtreyi değiştir ya da <span class="kbd">streams.json</span> içine yeni yayın ekle.</p>
+    </section>
+  </main>
+
+  <!-- Player Modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Player">
+    <div class="modal-backdrop" id="modalClose"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div id="mTitle" class="modal-title">Yayın</div>
+          <div id="mMeta" class="modal-meta"></div>
+        </div>
+        <button class="iconbtn" id="modalX" aria-label="Kapat">✕</button>
+      </div>
+      <div class="player">
+        <iframe id="frame" title="Live player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="modal-foot">
+        <a id="openSource" class="btn" target="_blank" rel="noreferrer">Kaynakta aç</a>
+        <button id="copyLink" class="btn" type="button">Sayfa linkini kopyala</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
 
