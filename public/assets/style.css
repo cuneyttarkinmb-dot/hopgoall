@@ -607,4 +607,15 @@ a{color:inherit}
   height: auto;
   display:block;
 }
+/* BG reklamları wallpaper gibi dursun (etiketi gizle) */
+.bg-ad .ad-label{ display:none; }
+.bg-ad .ad-link{ display:block; height:100%; }
+.bg-ad .ad-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.02);
+}
 
