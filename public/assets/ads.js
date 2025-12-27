@@ -178,21 +178,29 @@ floating: {
     [closeBtn, backdrop].forEach((x) => x && x.addEventListener("click", () => wrap.classList.add("hidden")));
   }
 
-  function setupFloating() {
-    const slot = ADS.floating;
-    const wrap = document.getElementById("adFloating");
-    if (!slot || !wrap) return;
+function setupFloating() {
+  const slot = ADS.floating;
+  const wrap = document.getElementById("adFloating");
+  if (!slot || !wrap) return;
 
-    if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
+  // Kullanıcı bu sayfada kapattıysa tekrar gösterme
+  if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
 
-    setTimeout(() => {
-      renderSlot(wrap, "floating");
-      wrap.classList.remove("hidden");
-    }, slot.showAfterMs || 2500);
+  setTimeout(() => {
+    // ✅ Önce kabuğu bas: X + içerik alanı
+    wrap.innerHTML = `
+      <!-- [BOTTOM BANNER CLOSE] Alt banner kapatma butonu -->
+      <button id="adFloatingClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
 
-    const closeBtn = document.getElementById("adFloatingClose");
-    closeBtn && closeBtn.addEventListener("click", () => {
-      wrap.classList.add("hidden");
+      <!-- [BOTTOM BANNER BODY] Reklam görseli buraya basılır -->
+      <div class="ad-body"></div>
+    `;
+    // ✅ Reklamı ad-body içine bas (wrap’in içini ezmesin)
+    const body = wrap.querySelector(".ad-body");
+    renderSlot(body, "floating");
+
+    // ✅ Göster
+    wrap.classList.remove("hidden");
       sessionStorage.setItem(LS.floatingClosed, "1");
     });
   }
@@ -203,7 +211,8 @@ floating: {
       if (slot === "floating") return;
       renderSlot(el, slot);
     });
-
+  }, slot.showAfterMs || 2500);
+}
     setupInterstitial();
     setupFloating();
   }
@@ -214,3 +223,9 @@ floating: {
     init();
   }
 })();
+/* Alt banner X butonu görünür olsun */
+#adFloatingClose{
+  display: grid !important;
+  place-items: center !important;
+  z-index: 10000 !important;
+}
