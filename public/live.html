@@ -7,6 +7,7 @@
   <meta name="description" content="Canlı yayın portalı" />
   <link rel="stylesheet" href="./assets/style.css" />
 </head>
+
 <body>
   <header class="topbar">
     <a class="brand" href="/">
@@ -25,6 +26,15 @@
   </header>
 
   <main class="container">
+
+    <!-- =========================================================
+         [AD_SLOT] TOP_BANNER (Banner Ads)
+         - Üst banner reklam alanı
+         - Kodda tanıman için: data-ad-slot="top_banner"
+         - Görsel/GIF + tıklama yönlendirme ads.js içinden yönetilir
+         ========================================================= -->
+    <div class="ad-slot ad-banner" data-ad-slot="top_banner"></div>
+
     <div class="layout">
       <!-- LEFT: PLAYER -->
       <section class="player-card">
@@ -70,6 +80,21 @@
           </label>
         </div>
 
+        <!-- =========================================================
+             [AD_SLOT] SIDEBAR_RECTANGLE (Sidebar Ads)
+             - Sağ panel içinde sabit reklam alanı
+             - Kodda tanıman için: data-ad-slot="sidebar_rectangle"
+             - 300x250 gibi görseller/GIF'ler için ideal
+             ========================================================= -->
+        <div class="ad-slot ad-rect" data-ad-slot="sidebar_rectangle"></div>
+
+        <!-- =========================================================
+             [NATIVE_ADS] (Native Ads)
+             - Bu alana HTML slot KOYMUYORUZ.
+             - Native reklamlar "liste içine" JS ile enjekte edilir:
+               ads.js içindeki native[] + app.js render() mantığı ile.
+             - Kodda tanıman için: HOPGOAL_ADS.native
+             ========================================================= -->
         <div id="list" class="list"></div>
 
         <div id="empty" class="empty hidden">
@@ -80,6 +105,42 @@
     </div>
   </main>
 
+  <!-- =========================================================
+       [AD_SLOT] FLOATING (Floating / Floating Sidebar Ads)
+       - Sağ altta açılan reklam kutusu
+       - Kapatma butonu var (✕)
+       - İçeriği ads.js doldurur: data-ad-slot="floating"
+       ========================================================= -->
+  <div id="adFloating" class="ad-floating hidden" data-ad-slot="floating">
+    <button id="adFloatingClose" class="ad-close" type="button" aria-label="Reklamı kapat">✕</button>
+  </div>
+
+  <!-- =========================================================
+       [AD_SLOT] INTERSTITIAL (Interstitial Ads)
+       - Sayfa açıldıktan kısa süre sonra tam ekran reklam
+       - Kapatma butonu + backdrop tıklayınca kapanır
+       - Görsel/GIF + yönlendirme ads.js içinden gelir
+       ========================================================= -->
+  <div id="adInterstitial" class="ad-interstitial hidden">
+    <div id="adInterstitialBackdrop" class="ad-interstitial-backdrop"></div>
+    <div class="ad-interstitial-card">
+      <button id="adInterstitialClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
+      <div class="ad-label">Interstitial</div>
+      <a href="#" target="_blank" rel="sponsored noopener noreferrer">
+        <img src="" alt="Interstitial Reklam">
+      </a>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [POPUP / POP-UNDER ADS]
+       - HTML tarafında slot yok.
+       - ads.js, tarayıcı engellemesin diye "ilk kullanıcı tıklaması" ile
+         yeni sekme açma mantığı kullanır (pop-under denemesi yapar).
+       ========================================================= -->
+
+  <!-- ÖNEMLİ: ads.js app.js’den ÖNCE yüklenmeli -->
+  <script src="./assets/ads.js"></script>
   <script src="./assets/app.js"></script>
 </body>
 </html>
