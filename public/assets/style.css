@@ -458,6 +458,28 @@ a{color:inherit}
   display: block;
   border-radius: 14px;
 }
+/* =========================================================
+   [AD_SLOT] PLAYER_BANNER
+   Player'ın (video) hemen altındaki banner.
+   - Konum sabit: Player altında hep aynı yerde durur
+   - Boyut hedefi: 728x90 (ama responsive küçülür)
+   ========================================================= */
+.ad-player-banner{
+  margin: 12px 14px;            /* player-card iç boşluk */
+  padding: 10px;
+}
+
+/* Player banner görseli */
+.ad-player-banner .ad-img{
+  width: min(728px, 100%);      /* 728x90 standardına uygun */
+  height: 90px;                 /* banner yüksekliği */
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;               /* ortala */
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+}
+
 
 /* -------------------------
    [FLOATING CLOSE BUTTON] X BUTONU (ORTA ÜST)
