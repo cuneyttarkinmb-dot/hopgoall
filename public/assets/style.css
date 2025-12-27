@@ -358,4 +358,144 @@ a{color:inherit}
   background: rgba(34,197,94,.10);
 }
 .time{color:rgba(77,225,255,.9);font-weight:700;font-size:12px}
+/* =========================================================
+   [ADS CSS] HopGoal Custom Ads (Google Ads değil)
+   Bu blok sadece reklam alanlarının görünümü içindir.
+   Slot isimleri:
+   - TOP_BANNER      => data-ad-slot="top_banner"
+   - SIDEBAR_RECT    => data-ad-slot="sidebar_rectangle"
+   - FLOATING        => #adFloating (data-ad-slot="floating")
+   - INTERSTITIAL    => #adInterstitial
+   - NATIVE ADS      => Liste içine JS ile girer (app.js)
+   ========================================================= */
+
+/* -------------------------
+   [AD_SLOT] TOP_BANNER
+   Üst banner reklam alanı
+   ------------------------- */
+.ad-slot{
+  position: relative;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  border-radius: 18px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.ad-banner{
+  padding: 10px;
+}
+
+/* -------------------------
+   [AD_SLOT] SIDEBAR_RECTANGLE
+   Sağ panel içindeki 300x250 gibi reklam alanı
+   ------------------------- */
+.ad-rect{
+  padding: 10px;
+  margin: 10px 12px 12px;
+}
+
+/* Reklam etiketi (küçük "Reklam" yazısı) */
+.ad-label{
+  position:absolute;
+  top:10px;
+  left:10px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.25);
+  color: rgba(234,242,255,.75);
+  z-index: 2;
+}
+
+/* Görsel/GIF tıklanabilir alan */
+.ad-link{
+  display:block;
+  text-decoration:none;
+}
+.ad-img{
+  width: 100%;
+  height: auto;
+  display:block;
+  border-radius: 14px;
+}
+
+/* -------------------------
+   [AD_SLOT] FLOATING
+   Sağ altta çıkan floating reklam kutusu
+   ------------------------- */
+.ad-floating{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: min(320px, 86vw);
+  z-index: 80;
+  padding: 10px;
+  border: 1px solid rgba(77,225,255,.25);
+  background: rgba(10,14,22,.78);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+/* Kapatma butonu (floating + interstitial ortak kullanır) */
+.ad-close{
+  position:absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: rgba(234,242,255,.85);
+  cursor: pointer;
+  z-index: 3;
+}
+
+/* -------------------------
+   [AD_SLOT] INTERSTITIAL
+   Sayfa açılışında tam ekran reklam
+   ------------------------- */
+.ad-interstitial{
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+}
+
+.ad-interstitial-backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.62);
+}
+
+.ad-interstitial-card{
+  position:relative;
+  width: min(980px, 92vw);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(10,14,22,.92);
+  padding: 14px;
+  overflow:hidden;
+  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+}
+
+.ad-interstitial-card img{
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  display:block;
+}
+
+/* -------------------------
+   [NATIVE ADS] Liste içine gömülen reklam kartları
+   Not: Native kartları .item stilini kullanır.
+   Burada sadece "native görsel" için minik iyileştirme var.
+   ------------------------- */
+.item img[alt="Native Reklam"]{
+  filter: saturate(1.05);
+}
 
