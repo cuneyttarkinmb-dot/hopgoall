@@ -14,29 +14,33 @@
      <script src="./assets/ads.js"></script>
      <script src="./assets/app.js"></script>
    ========================================================= */
+/* =========================================================
+   HopGoal Live - app.js
+   + Sağ liste (Maçlar/Kanallar)
+   + Native ads (liste içine)
+   + PREROLL: yayın seçince player içinde reklam (15sn / son 5sn geç)
+   ========================================================= */
 
 "use strict";
 
-/* =========================
-   [HELPERS] Kısayollar
-   ========================= */
 const $ = (s) => document.querySelector(s);
 
 const state = {
-  all: [],                 // streams.json'dan gelen tüm kayıtlar (match + channel)
-  tab: "match",            // aktif sekme: "match" | "channel"
-  onlyLive: true,          // sadece canlı filtre
-  activeId: null,          // seçili yayın id
+  all: [],
+  tab: "match",
+  onlyLive: true,
+  activeId: null,
+
+  // PREROLL state
+  prerollTimer: null,
+  prerollRemaining: 0,
+  prerollItem: null,
 };
 
 function safeText(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set(arr)].filter(Boolean); }
 
-/* =========================
-   [EMBED URL] Twitch / YouTube
-   ========================= */
 function twitchEmbedUrl(channel) {
-  // Twitch embed "parent" ister (domain). Cloudflare Pages domainin burada kullanılır.
   const parent = encodeURIComponent(location.hostname);
   return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${parent}&autoplay=true`;
 }
@@ -47,33 +51,28 @@ function buildEmbedUrl(item) {
   return item.embedUrl || "";
 }
 
-/* =========================
-   [NORMALIZE] streams.json kaydını standarda çevir
-   - kind: "match" | "channel"
-   ========================= */
 function normalize(item) {
-  const kind = safeText(item.kind || item.type || "channel"); // yoksa channel say
+  const kind = safeText(item.kind || item.type || "channel");
   return {
     ...item,
     kind: (kind === "match" ? "match" : "channel"),
     title: safeText(item.title),
     category: safeText(item.category || "Other"),
-    league: safeText(item.league || ""),   // maç için opsiyonel
-    time: safeText(item.time || ""),       // maç için opsiyonel
+    league: safeText(item.league || ""),
+    time: safeText(item.time || ""),
     isLive: !!item.isLive,
     sourceUrl: safeText(item.sourceUrl || ""),
   };
 }
 
 /* =========================
-   [FILTER] Sağ liste filtreleri
+   FILTER
    ========================= */
 function filteredList() {
   const qEl = $("#q");
   const q = safeText(qEl ? qEl.value : "").toLowerCase();
 
   let list = state.all.filter(x => x.kind === state.tab);
-
   if (state.onlyLive) list = list.filter(x => x.isLive);
 
   if (q) {
@@ -85,83 +84,179 @@ function filteredList() {
       return blob.includes(q);
     });
   }
-
   return list;
 }
 
+/* =========================================================
+   PREROLL (player içinde reklam)
+   ========================================================= */
+
+function getPrerollConfig() {
+  const cfg = window.HOPGOAL_ADS && window.HOPGOAL_ADS.preroll ? window.HOPGOAL_ADS.preroll : null;
+  if (!cfg || !cfg.enabled) return null;
+
+  const duration = Number(cfg.durationSeconds ?? 15);
+  const last = Number(cfg.skippableLastSeconds ?? 5);
+
+  const creatives = Array.isArray(cfg.creatives) ? cfg.creatives : [];
+  const creative = creatives.length ? creatives[Math.floor(Math.random() * creatives.length)] : null;
+
+  return {
+    durationSeconds: Math.max(3, duration),
+    skippableLastSeconds: Math.max(0, Math.min(last, duration)),
+    creative: creative || { image: "", clickUrl: "#", alt: "Reklam" },
+  };
+}
+
+function stopPreroll() {
+  if (state.prerollTimer) {
+    clearInterval(state.prerollTimer);
+    state.prerollTimer = null;
+  }
+  state.prerollRemaining = 0;
+  state.prerollItem = null;
+
+  const pr = $("#preRoll");
+  if (pr) pr.classList.add("hidden");
+}
+
+function startPrerollThenPlay(item) {
+  const cfg = getPrerollConfig();
+  const playerEl = $("#player");
+
+  // PREROLL kapalıysa direkt oynat
+  if (!cfg) {
+    const src = buildEmbedUrl(item);
+    if (playerEl) playerEl.src = src || "about:blank";
+    return;
+  }
+
+  // önce eski preroll varsa temizle
+  stopPreroll();
+
+  // iframe’i boş bırak (reklam bitene kadar video yüklenmesin)
+  if (playerEl) playerEl.src = "about:blank";
+
+  const pr = $("#preRoll");
+  const img = $("#preRollImg");
+  const link = $("#preRollClick");
+  const countdown = $("#preRollCountdown");
+  const skipBtn = $("#preRollSkip");
+
+  if (!pr || !img || !link || !countdown || !skipBtn) {
+    // overlay yoksa direkt oynat
+    const src = buildEmbedUrl(item);
+    if (playerEl) playerEl.src = src || "about:blank";
+    return;
+  }
+
+  // creative bas
+  img.src = cfg.creative.image || "";
+  img.alt = cfg.creative.alt || "Reklam";
+  link.href = cfg.creative.clickUrl || "#";
+
+  // süreyi başlat
+  state.prerollItem = item;
+  state.prerollRemaining = cfg.durationSeconds;
+
+  pr.classList.remove("hidden");
+  countdown.textContent = String(state.prerollRemaining);
+
+  // skip mantığı: SON X SANİYE KALINCA aktif
+  const enableSkipAt = cfg.skippableLastSeconds; // remaining <= enableSkipAt -> aktif
+  function updateSkipText() {
+    if (state.prerollRemaining <= enableSkipAt) {
+      skipBtn.disabled = false;
+      skipBtn.textContent = "Reklamı geç";
+    } else {
+      const wait = state.prerollRemaining - enableSkipAt;
+      skipBtn.disabled = true;
+      skipBtn.textContent = `${wait} sn sonra geç`;
+    }
+  }
+  updateSkipText();
+
+  // skip tıklanınca (son 5 saniyede aktif olacak)
+  skipBtn.onclick = () => {
+    if (skipBtn.disabled) return;
+    finishPrerollPlay(item);
+  };
+
+  // sayaç
+  state.prerollTimer = setInterval(() => {
+    state.prerollRemaining -= 1;
+    if (state.prerollRemaining < 0) state.prerollRemaining = 0;
+
+    countdown.textContent = String(state.prerollRemaining);
+    updateSkipText();
+
+    if (state.prerollRemaining <= 0) {
+      finishPrerollPlay(item);
+    }
+  }, 1000);
+}
+
+function finishPrerollPlay(item) {
+  stopPreroll(); // overlay kapat + timer temizle
+
+  const src = buildEmbedUrl(item);
+  const playerEl = $("#player");
+  if (playerEl) playerEl.src = src || "about:blank";
+}
+
 /* =========================
-   [PLAYER] Soldaki player'ı güncelle
+   PLAYER: seçim
    ========================= */
 function setActive(item) {
   state.activeId = item.id;
 
-  const titleEl = $("#pTitle");
-  const metaEl = $("#pMeta");
-  const playerEl = $("#player");
-  const sourceBtn = $("#btnSource");
-
-  if (titleEl) titleEl.textContent = item.title || "Yayın";
+  // UI (başlık/meta hemen güncellensin)
+  $("#pTitle").textContent = item.title || "Yayın";
 
   const metaBits = [item.category];
   if (item.league) metaBits.push(item.league);
   if (item.time) metaBits.push(item.time);
-  if (metaEl) metaEl.textContent = metaBits.filter(Boolean).join(" • ");
+  $("#pMeta").textContent = metaBits.filter(Boolean).join(" • ");
 
+  // Kaynak butonu (video daha başlamadan link hazır)
   const src = buildEmbedUrl(item);
-  if (playerEl) playerEl.src = src || "about:blank";
+  const btn = $("#btnSource");
+  btn.href = item.sourceUrl || src || "#";
+  btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
+  btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
 
-  if (sourceBtn) {
-    sourceBtn.href = item.sourceUrl || src || "#";
-    const ok = !!(item.sourceUrl || src);
-    sourceBtn.style.opacity = ok ? "1" : ".5";
-    sourceBtn.style.pointerEvents = ok ? "auto" : "none";
-  }
+  // ✅ PREROLL -> sonra video
+  startPrerollThenPlay(item);
 
-  render(); // aktif satır highlight için
+  render();
 }
 
-/* =========================================================
-   [NATIVE ADS] Liste içine reklam kartı ekleme
-   - Kaynak: ads.js -> window.HOPGOAL_ADS.native
-   - Her native ad:
-     {
-       id, tab: "match"|"channel"|"both", after: 2,
-       title, text, image, clickUrl, fallback
-     }
-   ========================================================= */
-
+/* =========================
+   NATIVE ADS (liste içine)
+   ========================= */
 function getNativeAdsForTab(tab) {
   const ads = (window.HOPGOAL_ADS && Array.isArray(window.HOPGOAL_ADS.native))
     ? window.HOPGOAL_ADS.native
     : [];
 
-  // tab filtrele + normalize
   return ads
     .filter(a => (a.tab === tab || a.tab === "both"))
     .map(a => ({
       id: safeText(a.id || `native-${Math.random()}`),
-      after: Number(a.after ?? 9999), // after=2 => 2 öğeden sonra
+      after: Number(a.after ?? 9999),
       title: safeText(a.title || "Reklam"),
       text: safeText(a.text || "Sponsorlu içerik"),
       image: safeText(a.image || ""),
-      fallback: safeText(a.fallback || ""),
       clickUrl: safeText(a.clickUrl || "#"),
     }))
     .sort((a, b) => a.after - b.after);
 }
 
 function nativeNode(ad) {
-  // .item stilini kullanıyoruz (senin UI ile uyumlu)
   const el = document.createElement("div");
   el.className = "item";
   el.style.borderColor = "rgba(77,225,255,.28)";
-  el.style.cursor = "pointer";
-
-  el.addEventListener("click", () => {
-    if (ad.clickUrl && ad.clickUrl !== "#") {
-      window.open(ad.clickUrl, "_blank", "noopener,noreferrer");
-    }
-  });
+  el.onclick = () => ad.clickUrl && window.open(ad.clickUrl, "_blank", "noopener,noreferrer");
 
   const left = document.createElement("div");
   left.className = "item-left";
@@ -183,10 +278,9 @@ function nativeNode(ad) {
   pill.textContent = "REKLAM";
   right.appendChild(pill);
 
-  const imgSrc = ad.image || ad.fallback;
-  if (imgSrc) {
+  if (ad.image) {
     const img = document.createElement("img");
-    img.src = imgSrc;
+    img.src = ad.image;
     img.alt = "Native Reklam";
     img.style.width = "72px";
     img.style.height = "40px";
@@ -202,22 +296,15 @@ function nativeNode(ad) {
 }
 
 /* =========================
-   [RENDER] Sağ listedeki kartları bas
-   - normal yayınlar + native ads birlikte
+   RENDER
    ========================= */
 function render() {
+  const list = filteredList();
   const root = $("#list");
   const empty = $("#empty");
   if (!root) return;
 
-  const list = filteredList();
   const natives = getNativeAdsForTab(state.tab);
-
-  root.innerHTML = "";
-
-  // Native reklamları "after" değerine göre araya serpiştir
-  // after=0 => en başa
-  // after=2 => 2 normal öğeden sonra
   const byAfter = new Map();
   for (const ad of natives) {
     const key = Number.isFinite(ad.after) ? ad.after : 9999;
@@ -225,14 +312,15 @@ function render() {
     byAfter.get(key).push(ad);
   }
 
-  // 0. sıraya native ekle (varsa)
+  root.innerHTML = "";
+
+  // after=0 en başa
   if (byAfter.has(0)) {
     for (const ad of byAfter.get(0)) root.appendChild(nativeNode(ad));
   }
 
-  let count = 0; // normal öğe sayacı
+  let count = 0;
   for (const item of list) {
-    // normal kart
     const el = document.createElement("div");
     el.className = "item" + (item.id === state.activeId ? " active" : "");
     el.onclick = () => setActive(item);
@@ -269,135 +357,91 @@ function render() {
     el.appendChild(right);
     root.appendChild(el);
 
-    // normal öğe sayacı
     count++;
-
-    // bu sayıya denk gelen native reklamları ekle
     if (byAfter.has(count)) {
       for (const ad of byAfter.get(count)) root.appendChild(nativeNode(ad));
     }
   }
 
-  // normal öğeler bitti, after daha büyük olan native'leri sona bas
-  const maxAfter = count;
+  // sona kalanlar
   for (const [after, ads] of byAfter.entries()) {
-    if (after > maxAfter) {
+    if (after > count) {
       for (const ad of ads) root.appendChild(nativeNode(ad));
     }
   }
 
-  // Empty state: root içinde hiç çocuk yoksa göster
   if (empty) empty.classList.toggle("hidden", root.children.length !== 0);
 }
 
 /* =========================
-   [TAB] Maçlar / Kanallar geçişi
+   TAB
    ========================= */
 function setTab(tab) {
   state.tab = tab;
 
-  const m = $("#tabMatches");
-  const c = $("#tabChannels");
-  if (m) m.classList.toggle("active", tab === "match");
-  if (c) c.classList.toggle("active", tab === "channel");
+  $("#tabMatches").classList.toggle("active", tab === "match");
+  $("#tabChannels").classList.toggle("active", tab === "channel");
 
-  // tab değişince seçili yayın yoksa temizle
   const list = filteredList();
   if (!list.some(x => x.id === state.activeId)) {
     state.activeId = null;
-
-    const playerEl = $("#player");
-    const titleEl = $("#pTitle");
-    const metaEl = $("#pMeta");
-
-    if (playerEl) playerEl.src = "about:blank";
-    if (titleEl) titleEl.textContent = "Bir yayın seç";
-    if (metaEl) metaEl.textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
+    $("#player").src = "about:blank";
+    $("#pTitle").textContent = "Bir yayın seç";
+    $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
   }
 
   render();
 }
 
 /* =========================
-   [LOAD] streams.json çek
+   LOAD
    ========================= */
 async function load() {
   const res = await fetch("./streams.json", { cache: "no-store" });
   const data = await res.json();
-
   state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
 
-  // açılışta: maç tabı
   setTab("match");
-
-  // ilk görünen öğeyi otomatik seç (varsa)
   const first = filteredList()[0] || null;
   if (first) setActive(first);
-
   render();
 }
 
 /* =========================
-   [WIRE] Event listenerlar
+   WIRE
    ========================= */
 function wire() {
-  const tabM = $("#tabMatches");
-  const tabC = $("#tabChannels");
-  const q = $("#q");
-  const onlyLive = $("#onlyLive");
-  const btnRefresh = $("#btnRefresh");
-  const btnClear = $("#btnClear");
+  $("#tabMatches").addEventListener("click", () => setTab("match"));
+  $("#tabChannels").addEventListener("click", () => setTab("channel"));
 
-  if (tabM) tabM.addEventListener("click", () => setTab("match"));
-  if (tabC) tabC.addEventListener("click", () => setTab("channel"));
+  $("#q").addEventListener("input", render);
 
-  if (q) q.addEventListener("input", render);
+  $("#onlyLive").addEventListener("change", (e) => {
+    state.onlyLive = !!e.target.checked;
+    render();
+  });
 
-  if (onlyLive) {
-    // sayfa açılışında checkbox state.onlyLive ile senkron kalsın
-    onlyLive.checked = !!state.onlyLive;
-    onlyLive.addEventListener("change", (e) => {
-      state.onlyLive = !!e.target.checked;
-      render();
-    });
-  }
+  $("#btnRefresh").addEventListener("click", () => {
+    const current = state.all.find(x => x.id === state.activeId);
+    if (!current) return;
+    const src = buildEmbedUrl(current);
+    $("#player").src = "about:blank";
+    setTimeout(() => { $("#player").src = src || "about:blank"; }, 80);
+  });
 
-  if (btnRefresh) {
-    btnRefresh.addEventListener("click", () => {
-      const current = state.all.find(x => x.id === state.activeId);
-      if (!current) return;
-
-      const src = buildEmbedUrl(current);
-      const playerEl = $("#player");
-      if (!playerEl) return;
-
-      playerEl.src = "about:blank";
-      setTimeout(() => { playerEl.src = src || "about:blank"; }, 80);
-    });
-  }
-
-  if (btnClear) {
-    btnClear.addEventListener("click", () => {
-      state.activeId = null;
-
-      const playerEl = $("#player");
-      const titleEl = $("#pTitle");
-      const metaEl = $("#pMeta");
-
-      if (playerEl) playerEl.src = "about:blank";
-      if (titleEl) titleEl.textContent = "Bir yayın seç";
-      if (metaEl) metaEl.textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
-
-      render();
-    });
-  }
+  $("#btnClear").addEventListener("click", () => {
+    stopPreroll();
+    state.activeId = null;
+    $("#player").src = "about:blank";
+    $("#pTitle").textContent = "Bir yayın seç";
+    $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
+    render();
+  });
 }
 
-/* =========================
-   [BOOT] Başlat
-   ========================= */
 wire();
 load().catch(() => {
-  const empty = $("#empty");
-  if (empty) empty.classList.remove("hidden");
+  $("#empty").classList.remove("hidden");
 });
+
+
