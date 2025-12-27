@@ -677,10 +677,18 @@ a{color:inherit}
    - X butonu reklamın tam orta üstünde
    ========================================================= */
 
+/* =========================================================
+   [BOTTOM DOCK AD] Alttaki uzun reklam barı (SABİT)
+   - Scroll yapsan bile ekranda ALTTA kalır
+   - Kapatma X bu bar içindir
+   - Player’daki X’e dokunmaz
+   ========================================================= */
+
+/* Alttaki uzun bar: #adFloating zaten var, onu dock gibi kullanıyoruz */
 #adFloating.ad-floating{
   position: fixed !important;
   left: 50% !important;
-  bottom: 16px !important;
+  bottom: 14px !important;
   transform: translateX(-50%) !important;
 
   right: auto !important;
@@ -688,35 +696,40 @@ a{color:inherit}
 
   z-index: 9999 !important;
 
-  padding: 10px;
+  width: min(1100px, 96vw);     /* uzun bar */
+  padding: 12px 14px;
+  border-radius: 18px;
+
   border: 1px solid rgba(77,225,255,.25);
   background: rgba(10,14,22,.78);
   backdrop-filter: blur(10px);
-  border-radius: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,.35);
 
-  width: auto !important;
-  max-width: 92vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Floating içindeki görsel boyutu (300x250) */
+/* Floating yazısını/pill label’ını istemiyorsan gizle */
+#adFloating .ad-label{ display:none; }
+
+/* Dock içindeki reklam görseli: banner gibi ortalansın */
 #adFloating .ad-img{
-  width: 300px;
-  max-width: 92vw;
+  width: min(970px, 94vw);
   height: auto;
-  display: block;
+  display:block;
   border-radius: 14px;
 }
 
-/* X butonu: reklamın orta üstünde + siteye uyumlu */
+/* Kapatma X: SADECE bu alt bar için */
 #adFloatingClose.ad-close{
   position: absolute !important;
   left: 50% !important;
   top: -14px !important;
   transform: translateX(-50%) !important;
 
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
 
   border: 1px solid rgba(255,255,255,.18);
@@ -735,4 +748,3 @@ a{color:inherit}
   border-color: rgba(77,225,255,.40);
   box-shadow: 0 0 0 2px rgba(77,225,255,.10), 0 10px 22px rgba(0,0,0,.35);
 }
-
