@@ -28,6 +28,15 @@
    /bg-right-600x1400.jpg
    /preroll-800x450.gif
    ========================================================= */
+/* =========================================================
+   HopGoal Ads (FIXED PATHS => /ads/...)
+
+   Senin dosyaların burada:
+   public/ads/*.gif, *.jpg
+
+   O yüzden tüm yollar:
+   /ads/xxxxx.gif  veya  /ads/xxxxx.jpg
+   ========================================================= */
 
 (function () {
   const LS = {
@@ -45,15 +54,15 @@
     top_banner: {
       label: "Banner",
       creatives: [
-        { image: "/banner-970x90.gif", clickUrl: "https://example.com/banner1", alt: "Top Banner 1" },
-        { image: "/banner-970x90-2.gif", clickUrl: "https://example.com/banner2", alt: "Top Banner 2" }
+        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/banner1", alt: "Top Banner 1" },
+        { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/banner2", alt: "Top Banner 2" }
       ]
     },
 
     sidebar_rectangle: {
       label: "Sidebar",
       creatives: [
-        { image: "/sidebar-300x250.gif", clickUrl: "https://example.com/sidebar", alt: "Sidebar Ad" }
+        { image: "/ads/sidebar-300x250.gif", clickUrl: "https://example.com/sidebar", alt: "Sidebar Ad" }
       ]
     },
 
@@ -61,7 +70,7 @@
       label: "Floating",
       showAfterMs: 2500,
       creatives: [
-        { image: "/floating-300x250.gif", clickUrl: "https://example.com/floating", alt: "Floating Ad" }
+        { image: "/ads/floating-300x250.gif", clickUrl: "https://example.com/floating", alt: "Floating Ad" }
       ]
     },
 
@@ -70,21 +79,21 @@
       showAfterMs: 1200,
       frequencyMinutes: 60,
       creatives: [
-        { image: "/interstitial-900x500.gif", clickUrl: "https://example.com/interstitial", alt: "Interstitial Ad" }
+        { image: "/ads/interstitial-900x500.gif", clickUrl: "https://example.com/interstitial", alt: "Interstitial Ad" }
       ]
     },
 
-    // ✅ Arka planlar (duvar kağıdı gibi)
+    // ✅ Arka plan skin
     bg_left: {
       label: "BG Left",
       creatives: [
-        { image: "/bg-left-600x1400.jpg", clickUrl: "https://example.com/bg-left", alt: "BG Left" }
+        { image: "/ads/bg-left-600x1400.jpg", clickUrl: "https://example.com/bg-left", alt: "BG Left" }
       ]
     },
     bg_right: {
       label: "BG Right",
       creatives: [
-        { image: "/bg-right-600x1400.jpg", clickUrl: "https://example.com/bg-right", alt: "BG Right" }
+        { image: "/ads/bg-right-600x1400.jpg", clickUrl: "https://example.com/bg-right", alt: "BG Right" }
       ]
     },
 
@@ -96,7 +105,7 @@
         after: 1,
         title: "Native Reklam: Özel Teklif",
         text: "Tıkla, kampanyayı gör.",
-        image: "/native-600x200.gif",
+        image: "/ads/native-600x200.gif",
         clickUrl: "https://example.com/native1"
       },
       {
@@ -105,21 +114,22 @@
         after: 2,
         title: "Native Reklam: Sponsor",
         text: "Detaylar için tıkla.",
-        image: "/native-600x200-2.gif",
+        image: "/ads/native-600x200-2.gif",
         clickUrl: "https://example.com/native2"
       }
     ],
 
-    // ✅ Player preroll (15sn, son 5sn geçilebilir)
+    // ✅ Player preroll
     preroll: {
       enabled: true,
       durationSeconds: 15,
       skippableLastSeconds: 5,
       creatives: [
-        { image: "/preroll-800x450.gif", clickUrl: "https://example.com/preroll", alt: "PreRoll" }
+        { image: "/ads/preroll-800x450.gif", clickUrl: "https://example.com/preroll", alt: "PreRoll" }
       ]
     },
 
+    // Pop-up kapalı
     popup: { enabled: false }
   };
 
@@ -134,11 +144,12 @@
   function renderSlot(el, slotName) {
     const s = ADS[slotName];
     if (!s) return;
+
     const c = pick(slotName) || {};
     el.innerHTML = `
       <div class="ad-label">${s.label || "Reklam"}</div>
       <a class="ad-link" href="${c.clickUrl || "#"}" target="_blank" rel="sponsored noopener noreferrer">
-        <img class="ad-img" src="${c.image || ""}" alt="${c.alt || "Reklam"}">
+        <img class="ad-img" src="${c.image || ""}" alt="${c.alt || "Reklam"}" loading="lazy">
       </a>
     `;
   }
