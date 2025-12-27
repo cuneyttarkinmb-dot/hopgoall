@@ -41,7 +41,7 @@
           alt: "Banner Reklam 1",
         },
         {
-          image: "./ads/banner-970x90-2.gif",
+          image: "/ads/banner-970x90-2.gif",
           clickUrl: "https://example.com/banner2",
           alt: "Banner Reklam 2",
         },
@@ -55,7 +55,7 @@
       sizeHint: "300x250",
       creatives: [
         {
-          image: "./ads/sidebar-300x250.gif",
+          image: "/ads/sidebar-300x250.gif",
           clickUrl: "https://example.com/sidebar1",
           alt: "Sidebar Reklam",
         },
@@ -70,7 +70,7 @@
       showAfterMs: 2500,
       creatives: [
         {
-          image: "./ads/floating-300x250.gif",
+          image: "/ads/floating-300x250.gif",
           clickUrl: "https://example.com/floating",
           alt: "Floating Reklam",
         },
@@ -86,7 +86,7 @@
       frequencyMinutes: 60, // 60 dk’da 1 kez
       creatives: [
         {
-          image: "./ads/interstitial-900x500.gif",
+          image: "/ads/interstitial-900x500.gif",
           clickUrl: "https://example.com/interstitial",
           alt: "Interstitial Reklam",
         },
@@ -96,7 +96,7 @@
 
     // Popup/Pop-under tarzı (tarayıcı engelleyebilir)
     popup: {
-      enabled: true,
+      enabled: false,
       frequencyMinutes: 180, // 3 saatte 1
       // pop-under garantisi yok; biz kullanıcı tıklamasıyla yeni sekme açıyoruz
       creatives: [
@@ -116,7 +116,7 @@
         after: 2,
         title: "Native Reklam: Özel Teklif",
         text: "Tıkla, kampanyayı gör.",
-        image: "./ads/native-600x200.gif",
+        image: "/ads/native-600x200.gif",
         clickUrl: "https://example.com/native1",
         fallback: placeholderDataUri("NATIVE (600x200)", 600, 200),
       },
@@ -126,7 +126,7 @@
         after: 3,
         title: "Native Reklam: Sponsor",
         text: "Detaylar için tıkla.",
-        image: "./ads/native-600x200-2.gif",
+        image: "/ads/native-600x200-2.gif",
         clickUrl: "https://example.com/native2",
         fallback: placeholderDataUri("NATIVE (600x200)", 600, 200),
       },
