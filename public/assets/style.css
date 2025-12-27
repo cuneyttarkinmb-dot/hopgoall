@@ -590,7 +590,7 @@ a{color:inherit}
 }
 
 /* Container içeriği bg-ads’in üstünde kalsın */
-.topbar, .container, .ad-floating, .ad-interstitial{
+.topbar, .container, .ad-interstitial{
   position: relative;
   z-index: 5;
 }
@@ -670,5 +670,69 @@ a{color:inherit}
   border-radius:18px;
   border:1px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.02);
+}
+/* =========================================================
+   [FLOATING] EKRANDA SABİT ALT ORTA + X ORTA ÜST
+   - Scroll yapsan bile altta sabit kalır
+   - X butonu reklamın tam orta üstünde
+   ========================================================= */
+
+#adFloating.ad-floating{
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 16px !important;
+  transform: translateX(-50%) !important;
+
+  right: auto !important;
+  top: auto !important;
+
+  z-index: 9999 !important;
+
+  padding: 10px;
+  border: 1px solid rgba(77,225,255,.25);
+  background: rgba(10,14,22,.78);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  width: auto !important;
+  max-width: 92vw;
+}
+
+/* Floating içindeki görsel boyutu (300x250) */
+#adFloating .ad-img{
+  width: 300px;
+  max-width: 92vw;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+}
+
+/* X butonu: reklamın orta üstünde + siteye uyumlu */
+#adFloatingClose.ad-close{
+  position: absolute !important;
+  left: 50% !important;
+  top: -14px !important;
+  transform: translateX(-50%) !important;
+
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.55);
+  color: rgba(234,242,255,.92);
+
+  display: grid;
+  place-items: center;
+
+  cursor: pointer;
+  z-index: 10000;
+  box-shadow: 0 10px 22px rgba(0,0,0,.35);
+}
+
+#adFloatingClose.ad-close:hover{
+  border-color: rgba(77,225,255,.40);
+  box-shadow: 0 0 0 2px rgba(77,225,255,.10), 0 10px 22px rgba(0,0,0,.35);
 }
 
