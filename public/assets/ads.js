@@ -64,7 +64,14 @@
         { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/banner2", alt: "Top Banner 2" }
       ]
     },
-
+ // ✅ Player altı banner
+    player_banner: {
+      label: "Player Banner",
+      creatives: [
+        // Mevcut dosyalarını kullanıyorum (kırık olmasın diye)
+        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/playerbanner1", alt: "Player Banner" }
+      ]
+    },
     sidebar_rectangle: {
       label: "Sidebar",
       creatives: [
