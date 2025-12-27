@@ -37,6 +37,12 @@
    O yüzden tüm yollar:
    /ads/xxxxx.gif  veya  /ads/xxxxx.jpg
    ========================================================= */
+/* =========================================================
+   HopGoal Ads (SAFE + BG ADS + PREROLL)
+   - Senin dosyaların: public/ads/*
+   - Popup/Popunder kapalı
+   - Floating: altta sabit banner + X ile kapat
+   ========================================================= */
 
 (function () {
   const LS = {
@@ -66,14 +72,15 @@
       ]
     },
 
-floating: {
-  label: "Bottom Dock",
-  showAfterMs: 1200,
-  creatives: [
-    { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/bottom1", alt: "Bottom Banner" },
-    { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/bottom2", alt: "Bottom Banner 2" }
-  ]
-},
+    // ✅ Alt sabit banner (floating slot’u bunu basacak)
+    floating: {
+      label: "Bottom Banner",
+      showAfterMs: 1200,
+      creatives: [
+        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/bottom1", alt: "Bottom Banner 1" },
+        { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/bottom2", alt: "Bottom Banner 2" }
+      ]
+    },
 
     interstitial: {
       label: "Interstitial",
@@ -84,7 +91,6 @@ floating: {
       ]
     },
 
-    // ✅ Arka plan skin
     bg_left: {
       label: "BG Left",
       creatives: [
@@ -98,7 +104,6 @@ floating: {
       ]
     },
 
-    // ✅ Liste içi native
     native: [
       {
         id: "native-1",
@@ -120,7 +125,6 @@ floating: {
       }
     ],
 
-    // ✅ Player preroll
     preroll: {
       enabled: true,
       durationSeconds: 15,
@@ -130,7 +134,6 @@ floating: {
       ]
     },
 
-    // Pop-up kapalı
     popup: { enabled: false }
   };
 
@@ -178,41 +181,46 @@ floating: {
     [closeBtn, backdrop].forEach((x) => x && x.addEventListener("click", () => wrap.classList.add("hidden")));
   }
 
-function setupFloating() {
-  const slot = ADS.floating;
-  const wrap = document.getElementById("adFloating");
-  if (!slot || !wrap) return;
+  // ✅ ALT SABİT BANNER + X
+  function setupFloating() {
+    const slot = ADS.floating;
+    const wrap = document.getElementById("adFloating");
+    if (!slot || !wrap) return;
 
-  // Kullanıcı bu sayfada kapattıysa tekrar gösterme
-  if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
+    // kullanıcı bu sekmede kapattıysa gösterme
+    if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
 
-  setTimeout(() => {
-    // ✅ Önce kabuğu bas: X + içerik alanı
-    wrap.innerHTML = `
-      <!-- [BOTTOM BANNER CLOSE] Alt banner kapatma butonu -->
-      <button id="adFloatingClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
+    setTimeout(() => {
+      // kabuk: X + body
+      wrap.innerHTML = `
+        <button id="adFloatingClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
+        <div class="ad-body"></div>
+      `;
 
-      <!-- [BOTTOM BANNER BODY] Reklam görseli buraya basılır -->
-      <div class="ad-body"></div>
-    `;
-    // ✅ Reklamı ad-body içine bas (wrap’in içini ezmesin)
-    const body = wrap.querySelector(".ad-body");
-    renderSlot(body, "floating");
+      // reklamı body'ye bas
+      const body = wrap.querySelector(".ad-body");
+      renderSlot(body, "floating");
 
-    // ✅ Göster
-    wrap.classList.remove("hidden");
-      sessionStorage.setItem(LS.floatingClosed, "1");
-    });
+      // göster
+      wrap.classList.remove("hidden");
+
+      // kapat
+      const closeBtn = document.getElementById("adFloatingClose");
+      closeBtn && closeBtn.addEventListener("click", () => {
+        wrap.classList.add("hidden");
+        sessionStorage.setItem(LS.floatingClosed, "1");
+      });
+    }, slot.showAfterMs || 1200);
   }
 
   function init() {
+    // data-ad-slot olanları bas
     document.querySelectorAll("[data-ad-slot]").forEach((el) => {
       const slot = el.getAttribute("data-ad-slot");
-      if (slot === "floating") return;
+      if (slot === "floating") return; // floating'i özel kuruyoruz
       renderSlot(el, slot);
     });
-  }, slot.showAfterMs || 2500);
-}
+
     setupInterstitial();
     setupFloating();
   }
@@ -223,9 +231,3 @@ function setupFloating() {
     init();
   }
 })();
-/* Alt banner X butonu görünür olsun */
-#adFloatingClose{
-  display: grid !important;
-  place-items: center !important;
-  z-index: 10000 !important;
-}
