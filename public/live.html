@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HopGoal Live</title>
   <meta name="description" content="Canlı yayın portalı" />
+  <!-- [CSS] Tüm site tasarımı + reklam alanlarının stilleri -->
   <link rel="stylesheet" href="./assets/style.css" />
 </head>
 
@@ -17,11 +18,18 @@
        - Görseli ads.js içinden gelir (bg_left / bg_right)
        ========================================================= -->
   <div class="bg-ads" aria-hidden="true">
+    <!-- [BG LEFT] Sol arka plan reklam alanı -->
     <div class="bg-ad bg-left" data-ad-slot="bg_left"></div>
+
+    <!-- [BG RIGHT] Sağ arka plan reklam alanı -->
     <div class="bg-ad bg-right" data-ad-slot="bg_right"></div>
   </div>
 
+  <!-- =========================================================
+       [HEADER] Üst bar (Logo + sosyal ikonlar + iletişim)
+       ========================================================= -->
   <header class="topbar">
+    <!-- [BRAND] Ana sayfaya götürür -->
     <a class="brand" href="/">
       <span class="brand-dot"></span>
       <span class="brand-text">
@@ -30,6 +38,7 @@
       </span>
     </a>
 
+    <!-- [TOP ACTIONS] Sağ üst ikonlar -->
     <div class="top-actions">
       <a class="icon" href="#" title="Twitter" aria-label="Twitter">𝕏</a>
       <a class="icon" href="#" title="Telegram" aria-label="Telegram">✈</a>
@@ -41,11 +50,16 @@
 
     <!-- =========================================================
          [AD_SLOT] TOP_BANNER (Üst Banner)
+         - Sayfanın üst kısmında geniş banner alanı
+         - Görsel/Link ads.js içinden gelir: top_banner
          ========================================================= -->
     <div class="ad-slot ad-banner" data-ad-slot="top_banner"></div>
 
     <div class="layout">
-      <!-- LEFT: PLAYER -->
+      <!-- =====================================================
+           [LEFT] PLAYER KARTI
+           - Solda video player + altında kaynak butonu vb.
+           ===================================================== -->
       <section class="player-card">
         <div class="player-head">
           <div>
@@ -54,15 +68,18 @@
           </div>
 
           <div class="player-actions">
+            <!-- [PLAYER] Seçili yayını yeniler -->
             <button id="btnRefresh" class="btn" type="button">Yayın açılmıyorsa yenile</button>
+
+            <!-- [PLAYER] Player'ı temizler/kapatır -->
             <button id="btnClear" class="iconbtn" type="button" title="Kapat">✕</button>
           </div>
         </div>
 
         <div class="player-frame">
           <!-- =========================================================
-               [PREROLL ADS] Yayın seçince 15sn reklam
-               - Süre + son 5 sn geçilebilir ayarı ads.js içinden
+               [PREROLL ADS] Yayın seçince 15sn reklam overlay
+               - Süre + son X sn geçilebilir ayarı ads.js içinden yönetilir
                - Reklam bitince video başlar
                ========================================================= -->
           <div id="preRoll" class="preroll hidden">
@@ -75,19 +92,24 @@
                     <span id="preRollCountdown">15</span>s
                   </div>
 
-                  <!-- Son 5 saniyede aktif olacak -->
+                  <!-- [PREROLL SKIP] Son X saniyede aktif olur -->
                   <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>
                     10 sn sonra geç
                   </button>
                 </div>
               </div>
 
+              <!-- [PREROLL CLICK] Reklama tıklayınca dış link -->
               <a id="preRollClick" class="preroll-body" href="#" target="_blank" rel="sponsored noopener noreferrer">
                 <img id="preRollImg" alt="Reklam" />
               </a>
             </div>
           </div>
 
+          <!-- =========================================================
+               [IFRAME PLAYER] Seçilen yayının embed'i burada açılır
+               - YouTube/Twitch embed URL app.js tarafından buraya basılır
+               ========================================================= -->
           <iframe
             id="player"
             title="Live player"
@@ -96,13 +118,26 @@
             src="about:blank"></iframe>
         </div>
 
+        <!-- =========================================================
+             ✅ [AD_SLOT] PLAYER_BANNER (Player altı sabit banner)
+             - Video alanının HEMEN ALTINDA görünür
+             - Görsel/link ads.js içinden gelir: player_banner
+             - Bu slot "player-card" içinde kaldığı için sabittir (scroll ile kayar)
+             ========================================================= -->
+        <div class="ad-slot ad-player-banner" data-ad-slot="player_banner"></div>
+
+        <!-- =========================================================
+             [PLAYER FOOT] Alt bar: Kaynak + streams.json hint
+             ========================================================= -->
         <div class="player-foot">
           <a id="btnSource" class="btn" target="_blank" rel="noreferrer">Kaynakta aç</a>
           <span class="hint">Yayın listesi: <span class="kbd">public/streams.json</span></span>
         </div>
       </section>
 
-      <!-- RIGHT: LIST -->
+      <!-- =====================================================
+           [RIGHT] SAĞ PANEL (Maçlar / Kanallar listesi)
+           ===================================================== -->
       <aside class="side-card">
         <div class="tabs">
           <button class="tab active" id="tabMatches" type="button">Maçlar</button>
@@ -119,11 +154,15 @@
 
         <!-- =========================================================
              [AD_SLOT] SIDEBAR_RECTANGLE (Sağ Panel Reklam)
+             - Liste üstünde, sağ panel içinde 300x250 gibi alan
+             - Görsel/link ads.js içinden gelir: sidebar_rectangle
              ========================================================= -->
         <div class="ad-slot ad-rect" data-ad-slot="sidebar_rectangle"></div>
 
+        <!-- [LIST] Maç/Kanal kartları buraya basılır -->
         <div id="list" class="list"></div>
 
+        <!-- [EMPTY] Liste boşsa gösterilir -->
         <div id="empty" class="empty hidden">
           <b>Sonuç yok</b>
           <div>Aramayı değiştir veya <span class="kbd">streams.json</span> içine yayın ekle.</div>
@@ -132,12 +171,22 @@
     </div>
   </main>
 
-  <!-- Floating -->
+  <!-- =========================================================
+       [AD_SLOT] FLOATING / BOTTOM DOCK (ALT SABİT REKLAM)
+       - Ekranın altında sabit duran reklam alanı (position:fixed CSS ile)
+       - Kapatma X butonu kullanıcı içindir
+       - İçerik/görsel ads.js tarafından doldurulur (floating)
+       ========================================================= -->
   <div id="adFloating" class="ad-floating hidden" data-ad-slot="floating">
+    <!-- [FLOATING CLOSE] Kullanıcı reklamı kapatır -->
     <button id="adFloatingClose" class="ad-close" type="button" aria-label="Reklamı kapat">✕</button>
+    <!-- Not: Reklam görselini ads.js buraya/ içine basar -->
   </div>
 
-  <!-- Interstitial -->
+  <!-- =========================================================
+       [AD_SLOT] INTERSTITIAL (Sayfa açılışında tam ekran reklam)
+       - Sıklık/frequency ve kapanma ads.js içinden yönetilir
+       ========================================================= -->
   <div id="adInterstitial" class="ad-interstitial hidden">
     <div id="adInterstitialBackdrop" class="ad-interstitial-backdrop"></div>
     <div class="ad-interstitial-card">
@@ -149,7 +198,12 @@
     </div>
   </div>
 
-  <!-- ÖNEMLİ: ads.js app.js’den önce -->
+  <!-- =========================================================
+       [SCRIPTS]
+       ÖNEMLİ: ads.js app.js’den önce gelmeli
+       - ads.js: reklamları ekrana basar
+       - app.js: yayın listesini çeker, player + listeyi yönetir
+       ========================================================= -->
   <script src="./assets/ads.js"></script>
   <script src="./assets/app.js"></script>
 </body>
