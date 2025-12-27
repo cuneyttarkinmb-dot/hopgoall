@@ -422,21 +422,74 @@ a{color:inherit}
 }
 
 /* -------------------------
-   [AD_SLOT] FLOATING
-   Sağ altta çıkan floating reklam kutusu
+   [AD_SLOT] FLOATING (ALT ORTA SABİT)
+   ✅ İSTEDİĞİN ŞEY: Sağ alttan kaldır → sayfanın alt ortasında sabit kalsın
+   - Scroll yapsan bile yerinde kalır (position:fixed)
+   - İçine ads.js reklam görselini basar (data-ad-slot="floating")
+   - Kapatma X butonu: reklamın tam orta üstünde görünür
    ------------------------- */
 .ad-floating{
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  width: min(320px, 86vw);
+  position: fixed;                /* Scroll olsa bile sabit */
+  left: 50%;                      /* Ortalamak için */
+  bottom: 16px;                   /* Ekranın altından boşluk */
+  transform: translateX(-50%);    /* Tam ortaya oturt */
   z-index: 80;
+
+  /* Kutu görünümü */
   padding: 10px;
   border: 1px solid rgba(77,225,255,.25);
   background: rgba(10,14,22,.78);
   backdrop-filter: blur(10px);
   border-radius: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  /* Mobilde taşmasın */
+  width: auto;
+  max-width: 92vw;
+}
+
+/* [FLOATING İÇİ] Görsel/GIF ölçü kontrolü
+   - Senin floating görselin 300x250 olduğu için genişlik 300px verdim
+   - İstersen 320, 280 vb. yapabilirsin
+*/
+#adFloating .ad-img{
+  width: 300px;                   /* Floating görsel genişliği */
+  height: auto;
+  display: block;
+  border-radius: 14px;
+}
+
+/* -------------------------
+   [FLOATING CLOSE BUTTON] X BUTONU (ORTA ÜST)
+   ✅ İSTEDİĞİN ŞEY: X sağ üst değil, reklamın orta üstünde olsun
+   - Bu buton HTML’de: <button id="adFloatingClose" class="ad-close">✕</button>
+   - class="ad-close" genel kullanılıyor ama biz burada ID ile override ediyoruz
+   ------------------------- */
+#adFloatingClose{
+  position: absolute;
+  left: 50%;
+  top: -14px;                     /* Reklamın üstüne taşsın */
+  transform: translateX(-50%);
+
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.55);
+  color: rgba(234,242,255,.92);
+  cursor: pointer;
+  z-index: 999;                   /* Reklamın üstünde kalsın */
+  display: grid;
+  place-items: center;
+
+  box-shadow: 0 10px 22px rgba(0,0,0,.35);
+}
+
+/* [FLOATING CLOSE] Hover efekti */
+#adFloatingClose:hover{
+  border-color: rgba(77,225,255,.40);
+  box-shadow: 0 0 0 2px rgba(77,225,255,.10), 0 10px 22px rgba(0,0,0,.35);
 }
 
 /* Kapatma butonu (floating + interstitial ortak kullanır) */
