@@ -1,1 +1,39 @@
+{
+  "site": {
+    "name": "HopGoal Live",
+    "defaultOnlyLive": true
+  },
+  "streams": [
+    {
+      "id": "yt-demo-1",
+      "title": "Demo YouTube Live",
+      "category": "News",
+      "provider": "youtube",
+      "youtubeEmbedUrl": "https://www.youtube.com/embed/live_stream?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw",
+      "sourceUrl": "https://www.youtube.com/",
+      "isLive": true,
+      "tags": ["demo", "youtube"]
+    },
+    {
+      "id": "twitch-demo-1",
+      "title": "Demo Twitch Channel",
+      "category": "Gaming",
+      "provider": "twitch",
+      "twitchChannel": "monstercat",
+      "sourceUrl": "https://www.twitch.tv/monstercat",
+      "isLive": true,
+      "tags": ["demo", "twitch"]
+    },
+    {
+      "id": "offline-demo",
+      "title": "Offline Örnek",
+      "category": "Sports",
+      "provider": "youtube",
+      "youtubeEmbedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "sourceUrl": "https://www.youtube.com/",
+      "isLive": false,
+      "tags": ["offline"]
+    }
+  ]
+}
 
