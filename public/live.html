@@ -9,6 +9,18 @@
 </head>
 
 <body>
+
+  <!-- =========================================================
+       [AD_SLOT] BG_LEFT / BG_RIGHT (SAĞ-SOL ARKA PLAN REKLAMLARI)
+       - Geniş ekranda sayfanın sağ/sol boşluklarını doldurur
+       - Tıklanınca linke gider
+       - Görseli ads.js içinden gelir (bg_left / bg_right)
+       ========================================================= -->
+  <div class="bg-ads" aria-hidden="true">
+    <div class="bg-ad bg-left" data-ad-slot="bg_left"></div>
+    <div class="bg-ad bg-right" data-ad-slot="bg_right"></div>
+  </div>
+
   <header class="topbar">
     <a class="brand" href="/">
       <span class="brand-dot"></span>
@@ -28,10 +40,7 @@
   <main class="container">
 
     <!-- =========================================================
-         [AD_SLOT] TOP_BANNER (Banner Ads)
-         - Üst banner reklam alanı
-         - Kodda tanıman için: data-ad-slot="top_banner"
-         - Görsel/GIF + tıklama yönlendirme ads.js içinden yönetilir
+         [AD_SLOT] TOP_BANNER (Üst Banner)
          ========================================================= -->
     <div class="ad-slot ad-banner" data-ad-slot="top_banner"></div>
 
@@ -51,6 +60,34 @@
         </div>
 
         <div class="player-frame">
+          <!-- =========================================================
+               [PREROLL ADS] Yayın seçince 15sn reklam
+               - Süre + son 5 sn geçilebilir ayarı ads.js içinden
+               - Reklam bitince video başlar
+               ========================================================= -->
+          <div id="preRoll" class="preroll hidden">
+            <div class="preroll-card">
+              <div class="preroll-top">
+                <div class="ad-label">Reklam</div>
+
+                <div class="preroll-right">
+                  <div class="preroll-timer">
+                    <span id="preRollCountdown">15</span>s
+                  </div>
+
+                  <!-- Son 5 saniyede aktif olacak -->
+                  <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>
+                    10 sn sonra geç
+                  </button>
+                </div>
+              </div>
+
+              <a id="preRollClick" class="preroll-body" href="#" target="_blank" rel="sponsored noopener noreferrer">
+                <img id="preRollImg" alt="Reklam" />
+              </a>
+            </div>
+          </div>
+
           <iframe
             id="player"
             title="Live player"
@@ -81,20 +118,10 @@
         </div>
 
         <!-- =========================================================
-             [AD_SLOT] SIDEBAR_RECTANGLE (Sidebar Ads)
-             - Sağ panel içinde sabit reklam alanı
-             - Kodda tanıman için: data-ad-slot="sidebar_rectangle"
-             - 300x250 gibi görseller/GIF'ler için ideal
+             [AD_SLOT] SIDEBAR_RECTANGLE (Sağ Panel Reklam)
              ========================================================= -->
         <div class="ad-slot ad-rect" data-ad-slot="sidebar_rectangle"></div>
 
-        <!-- =========================================================
-             [NATIVE_ADS] (Native Ads)
-             - Bu alana HTML slot KOYMUYORUZ.
-             - Native reklamlar "liste içine" JS ile enjekte edilir:
-               ads.js içindeki native[] + app.js render() mantığı ile.
-             - Kodda tanıman için: HOPGOAL_ADS.native
-             ========================================================= -->
         <div id="list" class="list"></div>
 
         <div id="empty" class="empty hidden">
@@ -105,22 +132,12 @@
     </div>
   </main>
 
-  <!-- =========================================================
-       [AD_SLOT] FLOATING (Floating / Floating Sidebar Ads)
-       - Sağ altta açılan reklam kutusu
-       - Kapatma butonu var (✕)
-       - İçeriği ads.js doldurur: data-ad-slot="floating"
-       ========================================================= -->
+  <!-- Floating -->
   <div id="adFloating" class="ad-floating hidden" data-ad-slot="floating">
     <button id="adFloatingClose" class="ad-close" type="button" aria-label="Reklamı kapat">✕</button>
   </div>
 
-  <!-- =========================================================
-       [AD_SLOT] INTERSTITIAL (Interstitial Ads)
-       - Sayfa açıldıktan kısa süre sonra tam ekran reklam
-       - Kapatma butonu + backdrop tıklayınca kapanır
-       - Görsel/GIF + yönlendirme ads.js içinden gelir
-       ========================================================= -->
+  <!-- Interstitial -->
   <div id="adInterstitial" class="ad-interstitial hidden">
     <div id="adInterstitialBackdrop" class="ad-interstitial-backdrop"></div>
     <div class="ad-interstitial-card">
@@ -132,14 +149,7 @@
     </div>
   </div>
 
-  <!-- =========================================================
-       [POPUP / POP-UNDER ADS]
-       - HTML tarafında slot yok.
-       - ads.js, tarayıcı engellemesin diye "ilk kullanıcı tıklaması" ile
-         yeni sekme açma mantığı kullanır (pop-under denemesi yapar).
-       ========================================================= -->
-
-  <!-- ÖNEMLİ: ads.js app.js’den ÖNCE yüklenmeli -->
+  <!-- ÖNEMLİ: ads.js app.js’den önce -->
   <script src="./assets/ads.js"></script>
   <script src="./assets/app.js"></script>
 </body>
