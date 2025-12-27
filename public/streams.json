@@ -1,56 +1,32 @@
 {
-  "site": {
-    "name": "HopGoal Live",
-    "defaultOnlyLive": true
-  },
+  "site": { "name": "HopGoal Live", "defaultOnlyLive": true },
   "streams": [
     {
-      "id": "yt-demo-1",
-      "title": "Demo YouTube Live",
+      "id": "ch-yt-1",
+      "kind": "channel",
+      "title": "YouTube Demo Channel",
       "category": "News",
       "provider": "youtube",
       "youtubeEmbedUrl": "https://www.youtube.com/embed/live_stream?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw",
       "sourceUrl": "https://www.youtube.com/",
       "isLive": true,
-      "tags": ["demo", "youtube"]
+      "tags": ["youtube"]
     },
     {
-      "id": "twitch-demo-1",
-      "title": "Demo Twitch Channel",
+      "id": "ch-tw-1",
+      "kind": "channel",
+      "title": "Twitch Demo Channel",
       "category": "Gaming",
       "provider": "twitch",
       "twitchChannel": "monstercat",
       "sourceUrl": "https://www.twitch.tv/monstercat",
       "isLive": true,
-      "tags": ["demo", "twitch"]
-    },
-    {
-      "id": "offline-demo",
-      "title": "Offline Örnek",
-      "category": "Sports",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      "sourceUrl": "https://www.youtube.com/",
-      "isLive": false,
-      "tags": ["offline"]
+      "tags": ["twitch"]
     },
     {
       "id": "match-1",
       "kind": "match",
       "title": "Vanspor - Hatayspor",
-      "time": "16:00",
-      "league": "Trendyol 1. Lig",
-      "category": "Football",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/embed/VIDEO_ID",
-      "sourceUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
-      "isLive": true,
-      "tags": ["maç", "futbol"]
-    },
-    {
-      "id": "match-2",
-      "kind": "match",
-      "title": "Fenerbahçe - Hatayspor",
       "time": "16:00",
       "league": "Trendyol 1. Lig",
       "category": "Football",
