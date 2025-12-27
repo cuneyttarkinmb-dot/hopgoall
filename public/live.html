@@ -4,64 +4,82 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HopGoal Live</title>
-  <meta name="description" content="Sade ve fütüristik canlı yayın portalı." />
+  <meta name="description" content="Canlı yayın portalı" />
   <link rel="stylesheet" href="./assets/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./index.html">
+    <a class="brand" href="/">
       <span class="brand-dot"></span>
       <span class="brand-text">
         <b>HopGoal Live</b>
-        <small>Fütüristik yayın portalı</small>
+        <small>Sağdan seç, soldan izle</small>
       </span>
     </a>
 
-    <div class="controls">
-      <input id="q" class="input" placeholder="Yayın ara… (başlık / kategori)" autocomplete="off" />
-      <select id="cat" class="select">
-        <option value="all">Tüm kategoriler</option>
-      </select>
-      <button id="onlyLive" class="btn" type="button" aria-pressed="true">Sadece canlı</button>
+    <div class="top-actions">
+      <a class="icon" href="#" title="Twitter" aria-label="Twitter">𝕏</a>
+      <a class="icon" href="#" title="Telegram" aria-label="Telegram">✈</a>
+      <a class="btn" href="#" title="İletişim">İletişim</a>
     </div>
   </header>
 
   <main class="container">
-    <section class="hero">
-      <h1>Canlı Yayınlar</h1>
-      <p>Yayınları <span class="kbd">streams.json</span> dosyasından yönetiyorsun. Yeni yayın ekle/çıkar → commit → otomatik güncellenir.</p>
-    </section>
+    <div class="layout">
+      <!-- LEFT: PLAYER -->
+      <section class="player-card">
+        <div class="player-head">
+          <div>
+            <div id="pTitle" class="player-title">Bir yayın seç</div>
+            <div id="pMeta" class="player-meta">Sağdaki listeden bir maç/kanal seçince burada açılır.</div>
+          </div>
 
-    <section id="grid" class="grid"></section>
-
-    <section id="empty" class="empty hidden">
-      <h2>Sonuç yok</h2>
-      <p>Arama/filtreyi değiştir ya da <span class="kbd">streams.json</span> içine yeni yayın ekle.</p>
-    </section>
-  </main>
-
-  <!-- Player Modal -->
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Player">
-    <div class="modal-backdrop" id="modalClose"></div>
-    <div class="modal-card">
-      <div class="modal-head">
-        <div>
-          <div id="mTitle" class="modal-title">Yayın</div>
-          <div id="mMeta" class="modal-meta"></div>
+          <div class="player-actions">
+            <button id="btnRefresh" class="btn" type="button">Yayın açılmıyorsa yenile</button>
+            <button id="btnClear" class="iconbtn" type="button" title="Kapat">✕</button>
+          </div>
         </div>
-        <button class="iconbtn" id="modalX" aria-label="Kapat">✕</button>
-      </div>
-      <div class="player">
-        <iframe id="frame" title="Live player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
-      </div>
-      <div class="modal-foot">
-        <a id="openSource" class="btn" target="_blank" rel="noreferrer">Kaynakta aç</a>
-        <button id="copyLink" class="btn" type="button">Sayfa linkini kopyala</button>
-      </div>
+
+        <div class="player-frame">
+          <iframe
+            id="player"
+            title="Live player"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen
+            src="about:blank"></iframe>
+        </div>
+
+        <div class="player-foot">
+          <a id="btnSource" class="btn" target="_blank" rel="noreferrer">Kaynakta aç</a>
+          <span class="hint">Yayın listesi: <span class="kbd">public/streams.json</span></span>
+        </div>
+      </section>
+
+      <!-- RIGHT: LIST -->
+      <aside class="side-card">
+        <div class="tabs">
+          <button class="tab active" id="tabMatches" type="button">Maçlar</button>
+          <button class="tab" id="tabChannels" type="button">Kanallar</button>
+        </div>
+
+        <div class="side-tools">
+          <input id="q" class="input" placeholder="Maç veya kanal ara..." autocomplete="off" />
+          <label class="toggle">
+            <input id="onlyLive" type="checkbox" checked />
+            <span>Sadece canlı</span>
+          </label>
+        </div>
+
+        <div id="list" class="list"></div>
+
+        <div id="empty" class="empty hidden">
+          <b>Sonuç yok</b>
+          <div>Aramayı değiştir veya <span class="kbd">streams.json</span> içine yayın ekle.</div>
+        </div>
+      </aside>
     </div>
-  </div>
+  </main>
 
   <script src="./assets/app.js"></script>
 </body>
 </html>
-
