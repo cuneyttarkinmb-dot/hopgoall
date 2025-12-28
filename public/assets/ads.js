@@ -60,7 +60,7 @@
     top_banner: {
       label: "Banner",
       creatives: [
-        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/banner1", alt: "Top Banner 1" },
+        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/banner1", alt: "Top Banner" },
         { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/banner2", alt: "Top Banner 2" }
       ]
     },
