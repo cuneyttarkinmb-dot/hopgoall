@@ -26,9 +26,10 @@
     { code: "FL1", name: "Fransa • Ligue 1" },
     { code: "PPL", name: "Portekiz • Primeira Liga" },
     { code: "DED", name: "Hollanda • Eredivisie" },
+    
 
     // Türkiye (plan izin vermezse “pakette yok” mesajı çıkar)
-    { code: "TSL", name: "Türkiye • Süper Lig" }
+    { code: "TR", name: "Türkiye • Süper Lig" }
   ];
 
   // Persist (son seçilen lig + açık/kapalı)
@@ -119,9 +120,15 @@
   async function loadStandings(code){
     try{
       if (meta) meta.textContent = "Güncelleniyor…";
-      const r = await fetch(`/api/standings?code=${encodeURIComponent(code)}`, { cache: "no-store" });
-      const j = await r.json();
+      
+      
+// Türkiye TR ise local dosyadan oku, diğer ligler API’den gelsin
+const url = (code === "TR")
+  ? `/data/standings-tr.json`
+  : `/api/standings?code=${encodeURIComponent(code)}`;
 
+const r = await fetch(url, { cache: "no-store" });
+       const j = await r.json();
       current = j;
 
       if (!j.ok) {
