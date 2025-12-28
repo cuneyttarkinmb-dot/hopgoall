@@ -1179,3 +1179,31 @@ a{color:inherit}
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.10);
 }
+/* =========================================================
+   [TOP BANNER SINGLE] Tek banner boşluğu doldursun
+   ========================================================= */
+
+/* Grid varsa artık kullanılmıyor ama kalmışsa da zarar vermesin */
+.ad-top-grid { display: none !important; }
+
+/* Tek top banner */
+.ad-top-banner{
+  width: 100%;
+  display: block;
+  margin: 12px 0;
+}
+
+/* İçindeki görsel/creative tam genişlik otursun */
+.ad-top-banner .ad-img,
+.ad-top-banner img{
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+/* Eğer slot içinde yazı/label varsa taşmasın */
+.ad-top-banner .ad-label{
+  max-width: 100%;
+}
