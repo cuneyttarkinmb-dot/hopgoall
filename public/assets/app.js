@@ -378,9 +378,20 @@ function render() {
 /* =========================
    TAB
    ========================= */
+function setTab(tab) {
+  // =========================================================
+  // [TAB SWITCH]
+  // Sekme değişince SADECE sağdaki liste değişir.
+  // Aktif yayın kapanmaz (player src resetlenmez).
+  // =========================================================
+  state.tab = tab;
 
+  $("#tabMatches").classList.toggle("active", tab === "match");
+  $("#tabChannels").classList.toggle("active", tab === "channel");
+
+  // YAYINI KESME! state.activeId aynı kalır.
+  render();
 }
-
 
 /* =========================
    LOAD
