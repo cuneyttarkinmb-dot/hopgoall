@@ -775,6 +775,13 @@ a{color:inherit}
    - Kartlar yatay kayar (overflow:auto)
    - Hover: site stiline uygun hafif glow
    ========================================================= */
+/* =========================================================
+   [POPULAR MATCHES] (Top 5) — Sağ panel üst şerit
+   - Çirkin link görünümünü yok eder
+   - 5 maç alt alta, kompakt row-card
+   - Logo + skor + dakika/saat
+   ========================================================= */
+
 .popular-wrap{
   padding: 12px 12px 10px;
   border-bottom: 1px solid var(--stroke);
@@ -800,92 +807,122 @@ a{color:inherit}
 
 .popular-list{
   display:flex;
-  gap:10px;
-  overflow:auto;
-  padding-bottom: 6px;
+  flex-direction: column;     /* alt alta */
+  gap: 8px;
 }
 
-.popular-empty{
+.pop-empty{
   color: var(--muted);
   font-size: 12px;
   padding: 6px 0;
 }
 
-/* Kart */
-.pop-card{
-  min-width: 240px;
-  flex: 0 0 auto;
+/* Link çizgilerini öldür (senin ekranda altı çizili gözüküyor) */
+.popular-wrap a,
+.pop-row{
+  text-decoration: none !important;
+}
+
+/* Row card */
+.pop-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+
   border: 1px solid var(--stroke);
   background: rgba(0,0,0,.12);
   border-radius: 14px;
-  padding: 10px;
-  text-decoration: none;
+  padding: 10px 10px;
   transition: .15s ease;
 }
 
-.pop-card:hover{
+.pop-row:hover{
   transform: translateY(-1px);
   border-color: rgba(77,225,255,.35);
   box-shadow: 0 0 0 2px rgba(77,225,255,.06);
 }
 
-/* Üst satır (takımlar) */
+/* Sol taraf */
+.pop-left{ min-width: 0; }
+
+.pop-league{
+  font-size: 11px;
+  color: var(--muted2);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
 .pop-teams{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:8px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .pop-team{
   display:flex;
   align-items:center;
-  gap:6px;
+  gap: 7px;
   min-width: 0;
 }
 
 .pop-logo{
   width: 18px;
   height: 18px;
-  border-radius: 4px;
+  border-radius: 5px;
   object-fit: contain;
   background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.10);
+  flex: 0 0 auto;
 }
 
 .pop-name{
   font-size: 12px;
-  color: var(--muted);
+  color: rgba(234,242,255,.85);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 88px;
+  max-width: 92px; /* panel dar olduğu için */
 }
 
-.pop-vs{
+.pop-sep{
   color: var(--muted2);
-  font-size: 11px;
+  font-size: 12px;
+  flex: 0 0 auto;
 }
 
-/* Alt satır (skor + dakika) */
-.pop-bottom{
+/* Sağ taraf: skor + meta */
+.pop-right{
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-top: 8px;
+  flex-direction: column;
+  align-items:flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-width: 64px;
 }
 
 .pop-score{
-  font-weight: 800;
+  font-weight: 900;
   font-size: 13px;
   color: var(--text);
 }
 
-.pop-minute{
+.pop-meta{
   font-size: 11px;
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(77,225,255,.25);
-  color: rgba(77,225,255,.9);
-  background: rgba(77,225,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--muted);
+  background: rgba(255,255,255,.04);
 }
+
+.pop-meta.live{
+  border-color: rgba(34,197,94,.35);
+  color: rgba(34,197,94,.95);
+  background: rgba(34,197,94,.10);
+}
+
