@@ -378,27 +378,7 @@ function render() {
 /* =========================
    TAB
    ========================= */
-function setTab(tab) {
-  // =========================================================
-  // [TAB SWITCH]
-  // Eskiden: Sekme değişince aktif yayın listeye uymuyorsa player sıfırlanıyordu.
-  // Bu da "Kanallar" sekmesine basınca yayını kapatıp poster gösteriyordu.
-  //
-  // Yeni: Sekme değişince aktif yayın KAPANMAZ.
-  // Sadece sağdaki liste değişir (maçlar/kanallar).
-  // =========================================================
-  state.tab = tab;
 
-  $("#tabMatches").classList.toggle("active", tab === "match");
-  $("#tabChannels").classList.toggle("active", tab === "channel");
-
-  // YAYINI KESME! (player src = about:blank yok)
-  // state.activeId olduğu gibi kalır, video devam eder.
-
-  render();
-
-
-  }
 }
 
 
