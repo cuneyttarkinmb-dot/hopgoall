@@ -1,1 +1,23 @@
+{
+  "matches": [
+    {
+      "id": "m1",
+      "home": { "name": "Vanspor", "logo": "" },
+      "away": { "name": "Hatayspor", "logo": "" },
+      "score": { "home": 0, "away": 1 },
+      "minute": 73,
+      "status": "LIVE",
+      "url": "https://www.sofascore.com/"
+    },
+    {
+      "id": "m2",
+      "home": { "name": "Team A", "logo": "" },
+      "away": { "name": "Team B", "logo": "" },
+      "score": { "home": 2, "away": 2 },
+      "minute": 55,
+      "status": "LIVE",
+      "url": "https://www.sofascore.com/"
+    }
+  ]
+}
 
