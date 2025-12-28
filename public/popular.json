@@ -1,23 +1,53 @@
 {
   "matches": [
     {
-      "id": "m1",
-      "home": { "name": "Vanspor", "logo": "" },
-      "away": { "name": "Hatayspor", "logo": "" },
+      "id": "p1",
+      "league": "Trendyol 1. Lig",
+      "home": { "name": "Vanspor", "logo": "/logos/vanspor.png" },
+      "away": { "name": "Hatayspor", "logo": "/logos/hatayspor.png" },
       "score": { "home": 0, "away": 1 },
-      "minute": 73,
       "status": "LIVE",
+      "minute": 73,
+      "kickoffTime": "16:00",
       "url": "https://www.sofascore.com/"
     },
     {
-      "id": "m2",
-      "home": { "name": "Team A", "logo": "" },
-      "away": { "name": "Team B", "logo": "" },
+      "id": "p2",
+      "league": "Serie A",
+      "home": { "name": "Torino", "logo": "/logos/torino.png" },
+      "away": { "name": "Cagliari", "logo": "/logos/cagliari.png" },
       "score": { "home": 2, "away": 2 },
-      "minute": 55,
       "status": "LIVE",
+      "minute": 55,
+      "kickoffTime": "17:00",
+      "url": "https://www.sofascore.com/"
+    },
+    {
+      "id": "p3",
+      "league": "Süper Lig",
+      "home": { "name": "Fenerbahçe", "logo": "/logos/fenerbahce.png" },
+      "away": { "name": "Galatasaray", "logo": "/logos/galatasaray.png" },
+      "status": "NS",
+      "kickoffTime": "20:00",
+      "url": "https://www.sofascore.com/"
+    },
+    {
+      "id": "p4",
+      "league": "LaLiga",
+      "home": { "name": "Barcelona", "logo": "/logos/barcelona.png" },
+      "away": { "name": "Real Madrid", "logo": "/logos/realmadrid.png" },
+      "status": "NS",
+      "kickoffTime": "22:00",
+      "url": "https://www.sofascore.com/"
+    },
+    {
+      "id": "p5",
+      "league": "Premier League",
+      "home": { "name": "Arsenal", "logo": "/logos/arsenal.png" },
+      "away": { "name": "Chelsea", "logo": "/logos/chelsea.png" },
+      "status": "NS",
+      "kickoffTime": "18:30",
       "url": "https://www.sofascore.com/"
     }
   ]
 }
-
