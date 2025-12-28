@@ -770,3 +770,122 @@ a{color:inherit}
   border-color: rgba(77,225,255,.40);
   box-shadow: 0 0 0 2px rgba(77,225,255,.10), 0 10px 22px rgba(0,0,0,.35);
 }
+/* =========================================================
+   [POPULAR MATCHES] Sağ panel üst şerit
+   - Kartlar yatay kayar (overflow:auto)
+   - Hover: site stiline uygun hafif glow
+   ========================================================= */
+.popular-wrap{
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.popular-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.popular-head b{
+  font-size: 13px;
+  letter-spacing: .2px;
+}
+
+.popular-head small{
+  color: var(--muted2);
+  font-size: 12px;
+}
+
+.popular-list{
+  display:flex;
+  gap:10px;
+  overflow:auto;
+  padding-bottom: 6px;
+}
+
+.popular-empty{
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 0;
+}
+
+/* Kart */
+.pop-card{
+  min-width: 240px;
+  flex: 0 0 auto;
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.12);
+  border-radius: 14px;
+  padding: 10px;
+  text-decoration: none;
+  transition: .15s ease;
+}
+
+.pop-card:hover{
+  transform: translateY(-1px);
+  border-color: rgba(77,225,255,.35);
+  box-shadow: 0 0 0 2px rgba(77,225,255,.06);
+}
+
+/* Üst satır (takımlar) */
+.pop-teams{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.pop-team{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width: 0;
+}
+
+.pop-logo{
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: contain;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.pop-name{
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 88px;
+}
+
+.pop-vs{
+  color: var(--muted2);
+  font-size: 11px;
+}
+
+/* Alt satır (skor + dakika) */
+.pop-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top: 8px;
+}
+
+.pop-score{
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.pop-minute{
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(77,225,255,.25);
+  color: rgba(77,225,255,.9);
+  background: rgba(77,225,255,.08);
+}
