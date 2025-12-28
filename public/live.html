@@ -130,6 +130,32 @@
              - Bu slot "player-card" içinde kaldığı için sabittir (scroll ile kayar)
              ========================================================= -->
         <div class="ad-slot ad-player-banner" data-ad-slot="player_banner"></div>
+<!-- =========================================================
+     [STANDINGS] Puan Durumu (banner altı)
+     - Üstten lig seçilir
+     - İlk başta Top 5
+     - Ok tıklanınca tam tablo açılır
+     ========================================================= -->
+<section class="standings-card" id="standingsCard">
+  <div class="standings-head">
+    <div class="standings-left">
+      <div class="standings-title">Puan Durumu</div>
+      <div class="standings-meta" id="standingsMeta">Güncelleniyor…</div>
+    </div>
+
+    <div class="standings-actions">
+      <select id="leagueSelect" class="standings-select" aria-label="Lig seç"></select>
+
+      <button id="standingsToggle" class="standings-toggle" type="button" aria-label="Tabloyu genişlet">
+        <span class="arrow">⌄</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="standings-table-wrap">
+    <table class="standings-table" id="standingsTable"></table>
+  </div>
+</section>
 
         <!-- =========================================================
              [PLAYER FOOT] Alt bar: Kaynak + streams.json hint
