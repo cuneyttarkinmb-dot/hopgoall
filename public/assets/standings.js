@@ -4,7 +4,7 @@
 // - /api/standings?code=PL üzerinden puan tablosunu çeker
 // - Üstten lig seçimi
 // - İlk başta ilk 5 takım
-// - Ok tıklanınca tam tablo (expanded)
+// - Ok tıklanınca tam tablo
 // =========================================================
 
 (function () {
@@ -14,25 +14,20 @@
   const tbl  = document.getElementById("standingsTable");
   const tog  = document.getElementById("standingsToggle");
 
-  if (!card || !sel || !tbl || !tog) return;
+  if (!card || !sel || !tbl) return;
 
-  // Lig listesi (football-data free listene göre)
-  // Not: Süper Lig kodu token paketinde olmayabilir, hata mesajı gösterilecek.
   const LEAGUES = [
+    { code: "TR",  name: "Türkiye • Süper Lig" },
+
     { code: "PL",  name: "İngiltere • Premier League" },
-    { code: "SA",  name: "İtalya • Serie A" },
     { code: "PD",  name: "İspanya • LaLiga" },
+    { code: "SA",  name: "İtalya • Serie A" },
     { code: "BL1", name: "Almanya • Bundesliga" },
     { code: "FL1", name: "Fransa • Ligue 1" },
     { code: "PPL", name: "Portekiz • Primeira Liga" },
     { code: "DED", name: "Hollanda • Eredivisie" },
-    
-
-    // Türkiye (plan izin vermezse “pakette yok” mesajı çıkar)
-    { code: "TR", name: "Türkiye • Süper Lig" }
   ];
 
-  // Persist (son seçilen lig + açık/kapalı)
   const LS_KEY_LEAGUE = "hopgoal_league_code";
   const LS_KEY_EXPAND = "hopgoal_standings_expand";
 
@@ -45,16 +40,15 @@
   function setExpanded(expanded){
     card.classList.toggle("expanded", !!expanded);
     localStorage.setItem(LS_KEY_EXPAND, expanded ? "1" : "0");
-    renderCurrent(); // aynı veriyi farklı sayıda satırla bas
+    renderCurrent();
   }
 
-  let current = null; // son gelen API datası
+  let current = null;
 
   function renderTable(rows){
     const expanded = card.classList.contains("expanded");
     const showRows = expanded ? rows : rows.slice(0, 5);
 
-    // Başlık + satırlar
     let html = `
       <thead>
         <tr>
@@ -72,22 +66,21 @@
     `;
 
     for (const r of showRows) {
-      const crest = r.crest ? `<img class="standings-crest" src="${esc(r.crest)}" alt="${esc(r.team)}" loading="lazy">` : "";
+      const crest = esc(r.crest || "");
+      const team  = esc(r.team || "");
       html += `
         <tr>
-          <td>${esc(r.pos)}</td>
-          <td>
-            <div class="standings-team">
-              ${crest}
-              <span>${esc(r.team)}</span>
-            </div>
+          <td class="st-pos">${esc(r.pos)}</td>
+          <td class="st-team">
+            ${crest ? `<img class="st-crest" src="${crest}" alt="${team}" loading="lazy">` : `<span class="st-crest st-crest--empty"></span>`}
+            <span class="st-teamname">${team}</span>
           </td>
           <td>${esc(r.played)}</td>
           <td>${esc(r.won)}</td>
           <td>${esc(r.draw)}</td>
           <td>${esc(r.lost)}</td>
           <td>${esc(r.gd)}</td>
-          <td><b>${esc(r.pts)}</b></td>
+          <td class="st-pts">${esc(r.pts)}</td>
         </tr>
       `;
     }
@@ -100,18 +93,15 @@
     tbl.innerHTML = `
       <tbody>
         <tr>
-          <td style="padding:10px;color:rgba(255,255,255,.75)">
-            ${esc(msg)}
-          </td>
+          <td class="st-error">${esc(msg)}</td>
         </tr>
       </tbody>
     `;
   }
 
   function renderCurrent(){
-    if (!current) return;
-    if (!current.ok) {
-      renderError(current.error || "Puan durumu alınamadı.");
+    if (!current || !current.ok) {
+      renderError(current?.error || "Şu an veri yok");
       return;
     }
     renderTable(Array.isArray(current.rows) ? current.rows : []);
@@ -120,25 +110,30 @@
   async function loadStandings(code){
     try{
       if (meta) meta.textContent = "Güncelleniyor…";
-      
-      
-// Türkiye TR ise local dosyadan oku, diğer ligler API’den gelsin
-const url = (code === "TR")
-  ? `/data/standings-tr.json`
-  : `/api/standings?code=${encodeURIComponent(code)}`;
 
-const r = await fetch(url, { cache: "no-store" });
-       const j = await r.json();
+      // 1) API dene
+      const apiUrl = `/api/standings?code=${encodeURIComponent(code)}`;
+      let r = await fetch(apiUrl, { cache: "no-store" });
+      let j = await r.json();
       current = j;
 
-      if (!j.ok) {
+      // 2) TR için API boşsa local fallback
+      if ((!j.ok || !Array.isArray(j.rows) || j.rows.length === 0) && code === "TR") {
+        try {
+          const r2 = await fetch(`/data/standings-tr.json`, { cache: "no-store" });
+          const j2 = await r2.json();
+          if (j2 && j2.ok) current = j2;
+        } catch(_) {}
+      }
+
+      if (!current.ok) {
         if (meta) meta.textContent = "Şu an veri yok";
         renderCurrent();
         return;
       }
 
-      const t = new Date(j.updatedAt).toLocaleTimeString("tr-TR", { hour:"2-digit", minute:"2-digit" });
-      if (meta) meta.textContent = `${j.competition?.name || code} • ${t}`;
+      const t = new Date(current.updatedAt).toLocaleTimeString("tr-TR", { hour:"2-digit", minute:"2-digit" });
+      if (meta) meta.textContent = `${current.competition?.name || code} • ${t}`;
 
       renderCurrent();
     } catch(e){
@@ -148,13 +143,12 @@ const r = await fetch(url, { cache: "no-store" });
     }
   }
 
-  // Dropdown doldur
   function initSelect(){
     sel.innerHTML = LEAGUES.map(l => `<option value="${esc(l.code)}">${esc(l.name)}</option>`).join("");
 
     const saved = localStorage.getItem(LS_KEY_LEAGUE);
-    const startCode = saved || "PL";
-    sel.value = startCode;
+    const startCode = saved || "TR";
+    if (LEAGUES.some(l => l.code === startCode)) sel.value = startCode;
 
     sel.addEventListener("change", () => {
       localStorage.setItem(LS_KEY_LEAGUE, sel.value);
@@ -162,21 +156,18 @@ const r = await fetch(url, { cache: "no-store" });
     });
   }
 
-  // Toggle
-  tog.addEventListener("click", () => {
-    const expanded = !card.classList.contains("expanded");
-    setExpanded(expanded);
-  });
+  if (tog) {
+    tog.addEventListener("click", () => {
+      const expanded = card.classList.contains("expanded");
+      setExpanded(!expanded);
+    });
+  }
 
   initSelect();
 
-  // Başlangıç expanded durumu
   const savedExpand = localStorage.getItem(LS_KEY_EXPAND);
   setExpanded(savedExpand === "1");
 
-  // İlk yükleme
   loadStandings(sel.value);
-
-  // 60 sn’de bir yenile (istersen 30 yaparsın)
   setInterval(() => loadStandings(sel.value), 60000);
 })();
