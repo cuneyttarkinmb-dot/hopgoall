@@ -1272,4 +1272,32 @@ a{color:inherit}
 }
 .st-pos{ color: rgba(255,255,255,.75); width: 28px; }
 .st-pts{ font-weight: 800; }
+/* === Standings select fix === */
+.standings-select{
+  width: min(360px, 100%);
+  padding: 10px 44px 10px 12px; /* sağda ok alanı */
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(15, 26, 46, .78);
+  color: rgba(255,255,255,.92);
+  outline: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255,255,255,.75) 50%),
+    linear-gradient(135deg, rgba(255,255,255,.75) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 55%,
+    calc(100% - 12px) 55%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.standings-select option{
+  background: #0b1324;
+  color: rgba(255,255,255,.92);
+}
 
