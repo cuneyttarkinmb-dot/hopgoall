@@ -1,58 +1,56 @@
 /* =========================================================
-   [POPULAR MATCHES]
-   - Sağ panelde “Popüler Maçlar” şeridini doldurur
-   - Varsayılan kaynak: /popular.json  (public/popular.json)
-   - İstersen sonra /api/popular gibi bir endpoint’e çevirirsin
+   [POPULAR MATCHES] (Top 5)
+   - Kaynak: /popular.json  (public/popular.json)
+   - Görünüm: sağ panel üstünde, alt alta 5 satır
+   - Canlıysa dakika gösterir, değilse saat gösterir
    ========================================================= */
 (() => {
   const ROOT_ID = "popularMatches";
   const STATUS_ID = "popularStatus";
-
-  // 1) En kolay: statik dosya
-  const FALLBACK_URL = "/popular.json";
-
-  // 2) Sonradan API’ye bağlamak istersen aç:
-  const API_URL = "/api/popular"; // yoksa otomatik fallback'e düşer
-
-  // Kaç saniyede bir yenilensin (30sn iyi)
+  const DATA_URL = "/popular.json";
   const REFRESH_MS = 30_000;
 
-  // Logo yoksa kırık gözükmesin diye küçük placeholder
   const LOGO_PH =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='100%25' height='100%25' rx='6' ry='6' fill='rgba(255,255,255,0.10)'/%3E%3C/svg%3E";
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='100%25' height='100%25' rx='6' ry='6' fill='rgba(255,255,255,0.10)'/%3E%3C/svg%3E";
 
   const $ = (id) => document.getElementById(id);
 
-  function fmtMinute(m) {
-    if (m === null || m === undefined || m === "") return "";
-    const n = Number(m);
-    if (Number.isFinite(n)) return `${n}'`;
-    return String(m);
+  function safe(v, d = "") { return (v === null || v === undefined) ? d : v; }
+
+  function isLiveStatus(status) {
+    const s = String(status || "").toUpperCase();
+    return ["LIVE","1H","2H","HT","ET","PEN","INPLAY"].includes(s);
   }
 
-  async function tryFetch(url) {
+  function fmtMinute(minute) {
+    const n = Number(minute);
+    if (!Number.isFinite(n)) return "";
+    return `${n}'`;
+  }
+
+  function fmtKickoff(kickoffTime) {
+    // kickoffTime: "16:00" veya ISO string
+    if (!kickoffTime) return "";
+    const t = String(kickoffTime);
+    if (/^\d{2}:\d{2}$/.test(t)) return t;
+
+    const d = new Date(t);
+    if (Number.isNaN(d.getTime())) return "";
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+
+  async function fetchMatches() {
     try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) return null;
-      return await res.json();
+      const res = await fetch(DATA_URL, { cache: "no-store" });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const arr = Array.isArray(data.matches) ? data.matches : (Array.isArray(data) ? data : []);
+      return arr;
     } catch {
-      return null;
+      return [];
     }
-  }
-
-  async function fetchPopularMatches() {
-    // Önce API dene (varsa)
-    const api = await tryFetch(API_URL);
-    if (api) {
-      // { matches: [...] } veya direkt [...]
-      const arr = Array.isArray(api.matches) ? api.matches : (Array.isArray(api) ? api : []);
-      if (arr.length) return arr;
-    }
-
-    // Sonra statik dosyaya düş
-    const fb = await tryFetch(FALLBACK_URL);
-    if (!fb) return [];
-    return Array.isArray(fb.matches) ? fb.matches : (Array.isArray(fb) ? fb : []);
   }
 
   function render(matches) {
@@ -61,58 +59,69 @@
 
     root.innerHTML = "";
 
-    if (!matches || matches.length === 0) {
-      root.innerHTML = `<div class="popular-empty">Şu an gösterilecek maç yok.</div>`;
+    const top5 = (matches || []).slice(0, 5);
+
+    if (top5.length === 0) {
+      root.innerHTML = `<div class="pop-empty">Şu an popüler maç yok.</div>`;
       return;
     }
 
-    matches.slice(0, 10).forEach((m) => {
-      const homeName = m?.home?.name || m?.homeName || "Home";
-      const awayName = m?.away?.name || m?.awayName || "Away";
-      const homeLogo = m?.home?.logo || m?.homeLogo || LOGO_PH;
-      const awayLogo = m?.away?.logo || m?.awayLogo || LOGO_PH;
+    top5.forEach((m) => {
+      const homeName = safe(m?.home?.name || m?.homeName, "Home");
+      const awayName = safe(m?.away?.name || m?.awayName, "Away");
+      const homeLogo = safe(m?.home?.logo || m?.homeLogo, LOGO_PH);
+      const awayLogo = safe(m?.away?.logo || m?.awayLogo, LOGO_PH);
 
-      const sh = (m?.score?.home ?? m?.homeScore ?? "");
-      const sa = (m?.score?.away ?? m?.awayScore ?? "");
+      const league = safe(m?.league, "");
+      const status = safe(m?.status, "");
+      const live = isLiveStatus(status);
 
-      // Skor yoksa status yaz
-      const scoreText =
-        (sh !== "" && sa !== "") ? `${sh} - ${sa}` : (m?.status || "LIVE");
+      const sh = m?.score?.home ?? m?.homeScore;
+      const sa = m?.score?.away ?? m?.awayScore;
+      const hasScore = (sh !== null && sh !== undefined && sa !== null && sa !== undefined && sh !== "" && sa !== "");
 
-      const minuteText = fmtMinute(m?.minute ?? m?.elapsed ?? "");
+      const scoreText = hasScore ? `${sh} - ${sa}` : "VS";
+      const minuteText = live ? fmtMinute(m?.minute ?? m?.elapsed) : "";
+      const kickoffText = !live ? fmtKickoff(m?.kickoffTime) : "";
 
-      const url = m?.url || "#";
+      const rightMeta = live ? (minuteText || "CANLI") : (kickoffText || status || "");
 
-      const card = document.createElement("a");
-      card.className = "pop-card";
-      card.href = url;
-      card.target = "_blank";
-      card.rel = "noopener noreferrer";
+      const url = safe(m?.url, "#");
 
-      card.innerHTML = `
-        <!-- Üst: Takımlar -->
-        <div class="pop-teams">
-          <div class="pop-team">
-            <img class="pop-logo" src="${homeLogo}" alt="" onerror="this.src='${LOGO_PH}'">
-            <span class="pop-name" title="${homeName}">${homeName}</span>
-          </div>
+      const a = document.createElement("a");
+      a.className = "pop-row";
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
 
-          <span class="pop-vs">vs</span>
+      a.innerHTML = `
+        <!-- SOL: Lig + Takımlar -->
+        <div class="pop-left">
+          ${league ? `<div class="pop-league">${league}</div>` : ``}
 
-          <div class="pop-team">
-            <img class="pop-logo" src="${awayLogo}" alt="" onerror="this.src='${LOGO_PH}'">
-            <span class="pop-name" title="${awayName}">${awayName}</span>
+          <div class="pop-teams">
+            <span class="pop-team">
+              <img class="pop-logo" src="${homeLogo}" alt="" onerror="this.src='${LOGO_PH}'">
+              <span class="pop-name" title="${homeName}">${homeName}</span>
+            </span>
+
+            <span class="pop-sep">-</span>
+
+            <span class="pop-team">
+              <img class="pop-logo" src="${awayLogo}" alt="" onerror="this.src='${LOGO_PH}'">
+              <span class="pop-name" title="${awayName}">${awayName}</span>
+            </span>
           </div>
         </div>
 
-        <!-- Alt: Skor + Dakika -->
-        <div class="pop-bottom">
-          <span class="pop-score">${scoreText}</span>
-          ${minuteText ? `<span class="pop-minute">${minuteText}</span>` : ``}
+        <!-- SAĞ: Skor + Dakika/Saat -->
+        <div class="pop-right">
+          <div class="pop-score">${scoreText}</div>
+          <div class="pop-meta ${live ? "live" : ""}">${rightMeta}</div>
         </div>
       `;
 
-      root.appendChild(card);
+      root.appendChild(a);
     });
   }
 
@@ -120,7 +129,7 @@
     const s = $(STATUS_ID);
     if (s) s.textContent = "Güncelleniyor…";
 
-    const matches = await fetchPopularMatches();
+    const matches = await fetchMatches();
     render(matches);
 
     if (s) s.textContent = matches.length ? "Canlı / popüler" : "Veri yok";
@@ -131,4 +140,3 @@
     setInterval(tick, REFRESH_MS);
   });
 })();
-
