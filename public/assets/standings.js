@@ -117,7 +117,7 @@
       let j = await r.json();
       current = j;
 
-      // 2) TR için API boşsa local fallback
+      // 2) TR için API boşsa local fallback (opsiyonel)
       if ((!j.ok || !Array.isArray(j.rows) || j.rows.length === 0) && code === "TR") {
         try {
           const r2 = await fetch(`/data/standings-tr.json`, { cache: "no-store" });
