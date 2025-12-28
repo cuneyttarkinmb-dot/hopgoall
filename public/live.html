@@ -139,6 +139,21 @@
            [RIGHT] SAĞ PANEL (Maçlar / Kanallar listesi)
            ===================================================== -->
       <aside class="side-card">
+        <!-- =========================================================
+     [POPULAR MATCHES] Sağ panelin en üstünde popüler maç şeridi
+     - Veriyi public/popular.json’dan çeker (assets/popular.js)
+     - Sonra istersen API’ye bağlarız
+     ========================================================= -->
+<section class="popular-wrap" aria-label="Popüler maçlar">
+  <div class="popular-head">
+    <b>Popüler Maçlar</b>
+    <small id="popularStatus">Yükleniyor…</small>
+  </div>
+
+  <!-- JS buraya kartları basacak -->
+  <div id="popularMatches" class="popular-list"></div>
+</section>
+
         <div class="tabs">
           <button class="tab active" id="tabMatches" type="button">Maçlar</button>
           <button class="tab" id="tabChannels" type="button">Kanallar</button>
@@ -205,6 +220,7 @@
        - app.js: yayın listesini çeker, player + listeyi yönetir
        ========================================================= -->
   <script src="./assets/ads.js"></script>
+  <script src="./assets/popular.js"></script>
   <script src="./assets/app.js"></script>
 </body>
 </html>
