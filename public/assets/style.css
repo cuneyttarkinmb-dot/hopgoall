@@ -373,6 +373,53 @@ a{color:inherit}
    [AD_SLOT] TOP_BANNER
    Üst banner reklam alanı
    ------------------------- */
+/* =========================================================
+   [AD_SLOT] TOP BANNER 4'lü GRID
+   - 2 sütun x 2 satır (desktop)
+   - Mobilde 1 sütun (alt alta)
+   ========================================================= */
+.ad-top-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+/* Grid içindeki slotlar zaten ad-slot, ama margin'i sıfırlayalım */
+.ad-top-grid .ad-slot{
+  margin: 0;
+}
+
+/* Mini banner görünümü (her kutu kendi slotu) */
+.ad-banner--mini{
+  padding: 10px;
+}
+
+/* Resmi kutuya tam oturt */
+.ad-banner--mini .ad-img{
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* İstersen label'ları kapat (TRGoals gibi temiz dursun)
+   Kapalı istersen aşağı satırı aç:
+*/
+/*
+.ad-banner--mini .ad-label{
+  display: none;
+}
+*/
+
+/* Mobilde 2 sütun dar gelirse tek sütuna düş */
+@media (max-width: 900px){
+  .ad-top-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
 .ad-slot{
   position: relative;
   border: 1px solid rgba(255,255,255,.12);
