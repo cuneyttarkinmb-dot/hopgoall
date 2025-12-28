@@ -9,10 +9,6 @@
 //
 // Desteklenen lig kodları (UI select bunları gönderiyor):
 // PL, SA, PD, BL1, FL1, PPL, DED, TR
-//
-// Kaynak notu:
-// - TheSportsDB ücretsiz v1 API'de geliştirme için test key "3" kullanılabilir. :contentReference[oaicite:3]{index=3}
-// - lookuptable.php örnek response içinde intRank/intPoints/strTeam/strBadge vb. gelir. :contentReference[oaicite:4]{index=4}
 // =========================================================
 
 const TTL_MS = 60 * 1000;
@@ -85,7 +81,6 @@ export async function onRequestGet({ request }) {
       });
     }
 
-    // TheSportsDB lookuptable endpoint örneği: :contentReference[oaicite:5]{index=5}
     const apiUrl =
       `https://www.thesportsdb.com/api/v1/json/3/lookuptable.php?l=${encodeURIComponent(league.idLeague)}&s=${encodeURIComponent(season)}`;
 
@@ -96,7 +91,7 @@ export async function onRequestGet({ request }) {
       const payloadEmpty = {
         ok: false,
         status: 404,
-        error: `Bu lig için tablo bulunamadı (TheSportsDB boş döndü). code=${code} season=${season}`,
+        error: `Bu lig için tablo bulunamadı. code=${code} season=${season}`,
       };
       CACHE.set(cacheKey, { ts: Date.now(), payload: payloadEmpty });
       return new Response(JSON.stringify(payloadEmpty), {
