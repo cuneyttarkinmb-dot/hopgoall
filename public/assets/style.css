@@ -1075,3 +1075,107 @@ a{color:inherit}
 .brand-logo:hover{
   transform: translateY(-1px);
 }
+/* =========================================================
+   [STANDINGS] Puan Durumu kartı
+   ========================================================= */
+.standings-card{
+  border-top: 1px solid var(--stroke);
+  padding: 12px 14px;
+  background: rgba(255,255,255,.02);
+}
+
+.standings-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.standings-title{
+  font-weight:800;
+  font-size:14px;
+}
+
+.standings-meta{
+  color: var(--muted);
+  font-size:12px;
+  margin-top:4px;
+}
+
+.standings-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.standings-select{
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--stroke);
+  color: rgba(255,255,255,.9);
+  border-radius: 12px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.standings-toggle{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.9);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+}
+
+.standings-toggle .arrow{
+  display:inline-block;
+  transform: rotate(0deg);
+  transition: transform .18s ease;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.standings-card.expanded .standings-toggle .arrow{
+  transform: rotate(180deg);
+}
+
+/* Tablo */
+.standings-table-wrap{
+  overflow:auto;
+}
+
+.standings-table{
+  width:100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.standings-table th,
+.standings-table td{
+  padding: 8px 8px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  white-space: nowrap;
+}
+
+.standings-table th{
+  color: rgba(255,255,255,.65);
+  font-weight: 700;
+}
+
+.standings-team{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.standings-crest{
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+}
