@@ -896,33 +896,116 @@ a{color:inherit}
 }
 
 /* Sağ taraf: skor + meta */
-.pop-right{
+/* =========================================================
+   [POPULAR MATCHES UI] Popüler 5 maç kutusu
+   - Sağ panel üstünde görünür
+   - Logo + takım adı + skor + dakika/saat
+   ========================================================= */
+
+.popular-card{
+  margin: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.popular-head{
   display:flex;
-  flex-direction: column;
-  align-items:flex-end;
-  gap: 6px;
-  flex: 0 0 auto;
-  min-width: 64px;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.popular-head b{font-size: 13px}
+.popular-head small{color: rgba(234,242,255,.60); font-size: 12px}
+
+.popular-list{ padding: 8px; display:flex; flex-direction:column; gap:8px; }
+
+.pm-item{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.12);
+  border-radius: 14px;
+  padding: 10px 10px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.pop-score{
-  font-weight: 900;
-  font-size: 13px;
-  color: var(--text);
-}
-
-.pop-meta{
+.pm-league{
   font-size: 11px;
-  padding: 3px 8px;
+  color: rgba(234,242,255,.60);
+  margin-bottom: 6px;
+}
+
+.pm-teams{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pm-team{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  min-width: 0;
+}
+.pm-team--right{ justify-content:flex-end; }
+
+.pm-logo{
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  object-fit: contain;
+}
+.pm-logo--empty{
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  display:inline-block;
+}
+
+.pm-name{
+  font-size: 12px;
+  color: rgba(234,242,255,.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.pm-mid{ display:flex; align-items:center; justify-content:center; }
+.pm-score{
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(234,242,255,.95);
+}
+
+.pm-right{ display:flex; align-items:center; }
+
+.pm-pill{
+  font-size: 11px;
+  padding: 5px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.14);
-  color: var(--muted);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(234,242,255,.75);
   background: rgba(255,255,255,.04);
 }
-
-.pop-meta.live{
+.pm-pill--live{
   border-color: rgba(34,197,94,.35);
   color: rgba(34,197,94,.95);
   background: rgba(34,197,94,.10);
 }
 
+.pm-empty{
+  padding: 10px;
+  color: rgba(234,242,255,.70);
+  font-size: 12px;
+}
