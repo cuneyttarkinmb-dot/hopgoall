@@ -1,19 +1,8 @@
 /* =========================================================
-   HopGoal Ads (SAFE + BG ADS + PREROLL + REMOTE SHEETS)
-
-   Slotlar:
-   - top_banner
-   - sidebar_rectangle
-   - floating
-   - interstitial
-   - bg_left / bg_right
-   - native[] (liste içine)
-   - preroll (video başlamadan önce)
-
-   REMOTE (Google Sheets):
-   - /api/ads endpoint’inden JSON gelir
-   - ok:true ve slots varsa, ADS içindeki slotların creatives’ini override eder
-   - Böylece GitHub’a girmeden banner değiştirebilirsin
+   HopGoal Ads (FAST RENDER + REMOTE SHEETS)
+   - İlk anda LOCAL reklamlari basar (boşluk kalmaz)
+   - Remote (/api/ads) gelince sadece img src/href günceller (flicker azalır)
+   - Basit preload ile görsel daha hızlı gelir
    ========================================================= */
 
 (function () {
@@ -31,107 +20,21 @@
   }
 
   // =========================
-  // LOCAL (fallback) ADS config
+  // LOCAL fallback config
   // =========================
-  const ADS = {
-    top_banner: {
-      label: "Banner",
-      creatives: [
-        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/banner1", alt: "Top Banner" },
-        { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/banner2", alt: "Top Banner 2" }
-      ]
-    },
-
-    // (Eski 4’lü grid slotları: sayfada yoksa zaten basılmaz)
-    top_banner_1: { label: "Banner", creatives: [{ image: "/ads/banner-970x90.gif",   clickUrl: "https://example.com/top1", alt: "Top Banner 1" }] },
-    top_banner_2: { label: "Banner", creatives: [{ image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/top2", alt: "Top Banner 2" }] },
-    top_banner_3: { label: "Banner", creatives: [{ image: "/ads/banner-970x90.gif",   clickUrl: "https://example.com/top3", alt: "Top Banner 3" }] },
-    top_banner_4: { label: "Banner", creatives: [{ image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/top4", alt: "Top Banner 4" }] },
-
-    // Player altı banner
-    player_banner: {
-      label: "Player Banner",
-      creatives: [
-        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/playerbanner1", alt: "Player Banner" }
-      ]
-    },
-
-    sidebar_rectangle: {
-      label: "Sidebar",
-      creatives: [
-        { image: "/ads/sidebar-300x250.gif", clickUrl: "https://example.com/sidebar", alt: "Sidebar Ad" }
-      ]
-    },
-
-    // Alt sabit banner (floating slot’u basacak)
-    floating: {
-      label: "Bottom Banner",
-      showAfterMs: 1200,
-      creatives: [
-        { image: "/ads/banner-970x90.gif",   clickUrl: "https://example.com/bottom1", alt: "Bottom Banner 1" },
-        { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/bottom2", alt: "Bottom Banner 2" }
-      ]
-    },
-
-    interstitial: {
-      label: "Interstitial",
-      showAfterMs: 1200,
-      frequencyMinutes: 60,
-      creatives: [
-        { image: "/ads/interstitial-900x500.gif", clickUrl: "https://example.com/interstitial", alt: "Interstitial Ad" }
-      ]
-    },
-
-    bg_left: {
-      label: "BG Left",
-      creatives: [
-        { image: "/ads/bg-left-600x1400.jpg", clickUrl: "https://example.com/bg-left", alt: "BG Left" }
-      ]
-    },
-
-    bg_right: {
-      label: "BG Right",
-      creatives: [
-        { image: "/ads/bg-right-600x1400.jpg", clickUrl: "https://example.com/bg-right", alt: "BG Right" }
-      ]
-    },
-
-    // liste içine native reklamlar (app.js bunu okuyor)
-    native: [
-      {
-        id: "native-1",
-        tab: "match",
-        after: 1,
-        title: "Native Reklam: Özel Teklif",
-        text: "Tıkla, kampanyayı gör.",
-        image: "/ads/native-600x200.gif",
-        clickUrl: "https://example.com/native1"
-      },
-      {
-        id: "native-2",
-        tab: "channel",
-        after: 2,
-        title: "Native Reklam: Sponsor",
-        text: "Detaylar için tıkla.",
-        image: "/ads/native-600x200-2.gif",
-        clickUrl: "https://example.com/native2"
-      }
-    ],
-
-    // preroll (app.js bunu okuyor)
-    preroll: {
-      enabled: true,
-      durationSeconds: 15,
-      skippableLastSeconds: 5,
-      creatives: [
-        { image: "/ads/preroll-800x450.gif", clickUrl: "https://example.com/preroll", alt: "PreRoll" }
-      ]
-    },
-
-    popup: { enabled: false }
+  const ADS = window.HOPGOAL_ADS || {
+    top_banner: { label: "Banner", creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Top Banner" }] },
+    player_banner: { label: "Player Banner", creatives: [{ image: "/ads/banner-970x90-2.gif", clickUrl: "#", alt: "Player Banner" }] },
+    sidebar_rectangle: { label: "Sidebar", creatives: [{ image: "/ads/sidebar-300x250.gif", clickUrl: "#", alt: "Sidebar" }] },
+    floating: { label: "Bottom Banner", showAfterMs: 1200, creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Bottom" }] },
+    interstitial: { label: "Interstitial", showAfterMs: 1200, frequencyMinutes: 60, creatives: [{ image: "/ads/interstitial-900x500.gif", clickUrl: "#", alt: "Interstitial" }] },
+    bg_left: { label: "BG Left", creatives: [{ image: "/ads/bg-left-600x1400.jpg", clickUrl: "#", alt: "BG Left" }] },
+    bg_right: { label: "BG Right", creatives: [{ image: "/ads/bg-right-600x1400.jpg", clickUrl: "#", alt: "BG Right" }] },
+    native: [],
+    preroll: { enabled: true, durationSeconds: 15, skippableLastSeconds: 5, creatives: [{ image: "/ads/preroll-800x450.gif", clickUrl: "#", alt: "PreRoll" }] },
+    popup: { enabled: false },
   };
 
-  // Dışarıya expose ediyoruz ki app.js okuyor
   window.HOPGOAL_ADS = ADS;
 
   // =========================
@@ -143,28 +46,55 @@
     return s.creatives[Math.floor(Math.random() * s.creatives.length)];
   }
 
-  function renderSlot(el, slotName) {
+  function preloadImage(url) {
+    if (!url) return;
+    const img = new Image();
+    img.decoding = "async";
+    img.loading = "eager";
+    img.src = url;
+  }
+
+  // Slot elementlerini "swap" etmek için işaretliyoruz
+  function ensureSlotShell(el, slotName) {
+    if (el.dataset.adReady === "1") return;
+
+    el.innerHTML = `
+      <div class="ad-label"></div>
+      <a class="ad-link" href="#" target="_blank" rel="sponsored noopener noreferrer">
+        <img class="ad-img" src="" alt="Reklam" loading="eager">
+      </a>
+    `;
+    el.dataset.adReady = "1";
+    el.dataset.adSlotName = slotName;
+  }
+
+  function updateSlot(el, slotName) {
     const s = ADS[slotName];
     if (!s) return;
 
     const c = pick(slotName) || {};
-    const img = c.image || "";
-    const href = c.clickUrl || "#";
-    const alt = c.alt || "Reklam";
-    const label = s.label || "Reklam";
+    const imgUrl = (c.image || "").trim();
 
-    // image boşsa slot’u boş bırak (UI bozulmasın)
-    if (!img) {
+    // image yoksa temizle
+    if (!imgUrl) {
       el.innerHTML = "";
       return;
     }
 
-    el.innerHTML = `
-      <div class="ad-label">${label}</div>
-      <a class="ad-link" href="${href}" target="_blank" rel="sponsored noopener noreferrer">
-        <img class="ad-img" src="${img}" alt="${alt}" loading="lazy">
-      </a>
-    `;
+    preloadImage(imgUrl);
+
+    ensureSlotShell(el, slotName);
+
+    const labelEl = el.querySelector(".ad-label");
+    const linkEl = el.querySelector(".ad-link");
+    const imgEl = el.querySelector(".ad-img");
+
+    if (labelEl) labelEl.textContent = s.label || "Reklam";
+    if (linkEl) linkEl.href = c.clickUrl || "#";
+    if (imgEl) {
+      imgEl.src = imgUrl;
+      imgEl.alt = c.alt || "Reklam";
+    }
   }
 
   // =========================
@@ -180,6 +110,10 @@
 
     setTimeout(() => {
       const c = pick("interstitial") || {};
+      if (!c.image) return;
+
+      preloadImage(c.image);
+
       const img = wrap.querySelector("img");
       const a = wrap.querySelector("a");
       if (img) { img.src = c.image || ""; img.alt = c.alt || "Interstitial"; }
@@ -201,24 +135,19 @@
     const wrap = document.getElementById("adFloating");
     if (!slot || !wrap) return;
 
-    // kullanıcı bu sekmede kapattıysa gösterme
     if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
 
     setTimeout(() => {
-      // kabuk: X + body
       wrap.innerHTML = `
         <button id="adFloatingClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
-        <div class="ad-body"></div>
+        <div class="ad-body" data-ad-slot="floating"></div>
       `;
 
-      // reklamı body'ye bas
       const body = wrap.querySelector(".ad-body");
-      if (body) renderSlot(body, "floating");
+      if (body) updateSlot(body, "floating");
 
-      // göster
       wrap.classList.remove("hidden");
 
-      // kapat
       const closeBtn = document.getElementById("adFloatingClose");
       closeBtn && closeBtn.addEventListener("click", () => {
         wrap.classList.add("hidden");
@@ -228,49 +157,41 @@
   }
 
   // =========================
-  // MAIN RENDER (tekrar çağrılabilir)
+  // MAIN apply
   // =========================
   function applyAds() {
-    // sayfadaki tüm slotları bas
     document.querySelectorAll("[data-ad-slot]").forEach((el) => {
       const slot = el.getAttribute("data-ad-slot");
       if (!slot) return;
-      if (slot === "floating") return; // floating'i özel kuruyoruz
-      renderSlot(el, slot);
+      if (slot === "floating") return; // özel kuruyoruz
+      updateSlot(el, slot);
     });
 
     setupInterstitial();
     setupFloating();
   }
 
-  // Dışarıya aç (gerekirse başka yerden de çağırırsın)
   window.applyAds = applyAds;
 
   // =========================
-  // REMOTE (Google Sheets -> /api/ads)
+  // REMOTE merge (Sheets)
   // =========================
   function mergeRemoteSlots(remoteSlots) {
-    // remoteSlots formatı:
-    // { top_banner:{label, creatives:[{image,clickUrl,alt}]}, ... }
-    // Biz sadece label+creatives’i override ediyoruz, diğer ayarlar (showAfterMs vs) localden kalsın.
     if (!remoteSlots || typeof remoteSlots !== "object") return;
 
     Object.keys(remoteSlots).forEach((slotName) => {
       const remote = remoteSlots[slotName];
       if (!remote) return;
 
-      // remote.creatives varsa kullan
       const creatives = Array.isArray(remote.creatives) ? remote.creatives : null;
       const label = typeof remote.label === "string" ? remote.label : null;
 
-      if (!ADS[slotName]) {
-        // localde yoksa minimal slot aç
-        ADS[slotName] = { label: label || "Reklam", creatives: creatives || [] };
-        return;
-      }
-
+      if (!ADS[slotName]) ADS[slotName] = { label: label || "Reklam", creatives: creatives || [] };
       if (label) ADS[slotName].label = label;
       if (creatives) ADS[slotName].creatives = creatives;
+
+      // remote creatives varsa preload
+      if (creatives) creatives.forEach(c => preloadImage((c.image || "").trim()));
     });
   }
 
@@ -278,26 +199,21 @@
     try {
       const r = await fetch("/api/ads", { cache: "no-store" });
       const j = await r.json();
-
-      // Apps Script payload’ı:
-      // { ok:true, updatedAt:"...", slots:{...} }
       if (!j || !j.ok || !j.slots) return;
 
       mergeRemoteSlots(j.slots);
 
-      // Remote geldiyse tekrar bas (anında güncellenir)
+      // Remote geldikten sonra sadece güncelle
       applyAds();
     } catch (e) {
       console.warn("[ads.js] remote ads failed:", e);
     }
   }
 
-  // =========================
-  // INIT
-  // =========================
   function init() {
+    // İlk anda LOCAL bas
     applyAds();
-    // Remote'u arkadan çek, gelirse override et
+    // Remote gelince sadece swap
     loadRemoteAds();
   }
 
