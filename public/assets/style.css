@@ -1207,6 +1207,9 @@ a{color:inherit}
 .ad-top-banner .ad-label{
   max-width: 100%;
 }
+
+
+
 /* =========================================================
    [STANDINGS UI FIX]
    ========================================================= */
@@ -1269,3 +1272,4 @@ a{color:inherit}
 }
 .st-pos{ color: rgba(255,255,255,.75); width: 28px; }
 .st-pts{ font-weight: 800; }
+
