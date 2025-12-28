@@ -144,14 +144,19 @@
      - Veriyi public/popular.json’dan çeker (assets/popular.js)
      - Sonra istersen API’ye bağlarız
      ========================================================= -->
-<section class="popular-wrap" aria-label="Popüler maçlar">
+<!-- =========================================================
+     [POPULAR MATCHES] Popüler 5 Maç (Canlı skor / dakika / saat)
+     - Veri: /api/popular (Cloudflare Pages Function)
+     - Görünüm: style.css içindeki .popular-card / .pm-* stilleri
+     ========================================================= -->
+<section class="popular-card">
   <div class="popular-head">
     <b>Popüler Maçlar</b>
-    <small id="popularStatus">Yükleniyor…</small>
+    <small id="popularMeta">Yükleniyor…</small>
   </div>
 
-  <!-- JS buraya kartları basacak -->
-  <div id="popularMatches" class="popular-list"></div>
+  <!-- Maç satırları buraya JS ile basılır -->
+  <div id="popularList" class="popular-list"></div>
 </section>
 
         <div class="tabs">
