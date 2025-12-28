@@ -1,26 +1,3 @@
-/* =========================================================
-   HopGoal Live - app.js (ANA UYGULAMA DOSYASI)
-
-   Bu dosya ne yapar?
-   1) streams.json içeriğini çeker
-   2) Sağ tarafta Maçlar / Kanallar listesini oluşturur
-   3) Sağdan seçilen yayını soldaki player'da açar
-   4) Arama + "Sadece canlı" filtresi uygular
-   5) Native Ads: Sağ listedeki öğelerin arasına reklam kartı ekler
-      (ads.js içindeki HOPGOAL_ADS.native alanından okur)
-
-   ÖNEMLİ:
-   - live.html içinde script sırası şöyle olmalı:
-     <script src="./assets/ads.js"></script>
-     <script src="./assets/app.js"></script>
-   ========================================================= */
-/* =========================================================
-   HopGoal Live - app.js
-   + Sağ liste (Maçlar/Kanallar)
-   + Native ads (liste içine)
-   + PREROLL: yayın seçince player içinde reklam (15sn / son 5sn geç)
-   ========================================================= */
-
 "use strict";
 
 const $ = (s) => document.querySelector(s);
@@ -37,8 +14,6 @@ const state = {
   prerollItem: null,
 };
 
-
-
 function safeText(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set(arr)].filter(Boolean); }
 
@@ -47,8 +22,46 @@ function twitchEmbedUrl(channel) {
   return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${parent}&autoplay=true`;
 }
 
+/* =========================
+   ✅ YouTube: watch / youtu.be -> embed URL
+   ========================= */
+function youtubeToEmbedUrl(raw) {
+  if (!raw) return "";
+  try {
+    const u = new URL(raw);
+
+    // youtu.be/VIDEO_ID
+    if (u.hostname.includes("youtu.be")) {
+      const vid = u.pathname.replace("/", "");
+      if (!vid) return "";
+      return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&playsinline=1&rel=0`;
+    }
+
+    // youtube.com/watch?v=VIDEO_ID
+    const v = u.searchParams.get("v");
+    if (v) {
+      return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&playsinline=1&rel=0`;
+    }
+
+    // youtube.com/embed/VIDEO_ID
+    if (u.pathname.startsWith("/embed/")) {
+      const parts = u.pathname.split("/");
+      const vid = parts[2] || "";
+      if (!vid) return "";
+      return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&playsinline=1&rel=0`;
+    }
+
+    return raw;
+  } catch {
+    return raw;
+  }
+}
+
 function buildEmbedUrl(item) {
-  if (item.provider === "youtube") return item.youtubeEmbedUrl || "";
+  if (item.provider === "youtube") {
+    const raw = item.youtubeEmbedUrl || item.youtubeUrl || item.embedUrl || item.url || "";
+    return youtubeToEmbedUrl(raw);
+  }
   if (item.provider === "twitch") return item.twitchChannel ? twitchEmbedUrl(item.twitchChannel) : "";
   return item.embedUrl || "";
 }
@@ -90,9 +103,8 @@ function filteredList() {
 }
 
 /* =========================================================
-   PREROLL (player içinde reklam)
+   PREROLL
    ========================================================= */
-
 function getPrerollConfig() {
   const cfg = window.HOPGOAL_ADS && window.HOPGOAL_ADS.preroll ? window.HOPGOAL_ADS.preroll : null;
   if (!cfg || !cfg.enabled) return null;
@@ -122,6 +134,13 @@ function stopPreroll() {
   if (pr) pr.classList.add("hidden");
 }
 
+function finishPrerollPlay(item) {
+  stopPreroll();
+  const src = buildEmbedUrl(item);
+  const playerEl = $("#player");
+  if (playerEl) playerEl.src = src || "about:blank";
+}
+
 function startPrerollThenPlay(item) {
   const cfg = getPrerollConfig();
   const playerEl = $("#player");
@@ -133,7 +152,6 @@ function startPrerollThenPlay(item) {
     return;
   }
 
-  // önce eski preroll varsa temizle
   stopPreroll();
 
   // iframe’i boş bırak (reklam bitene kadar video yüklenmesin)
@@ -145,8 +163,8 @@ function startPrerollThenPlay(item) {
   const countdown = $("#preRollCountdown");
   const skipBtn = $("#preRollSkip");
 
+  // overlay yoksa direkt oynat
   if (!pr || !img || !link || !countdown || !skipBtn) {
-    // overlay yoksa direkt oynat
     const src = buildEmbedUrl(item);
     if (playerEl) playerEl.src = src || "about:blank";
     return;
@@ -165,7 +183,7 @@ function startPrerollThenPlay(item) {
   countdown.textContent = String(state.prerollRemaining);
 
   // skip mantığı: SON X SANİYE KALINCA aktif
-  const enableSkipAt = cfg.skippableLastSeconds; // remaining <= enableSkipAt -> aktif
+  const enableSkipAt = cfg.skippableLastSeconds;
   function updateSkipText() {
     if (state.prerollRemaining <= enableSkipAt) {
       skipBtn.disabled = false;
@@ -178,7 +196,6 @@ function startPrerollThenPlay(item) {
   }
   updateSkipText();
 
-  // skip tıklanınca (son 5 saniyede aktif olacak)
   skipBtn.onclick = () => {
     if (skipBtn.disabled) return;
     finishPrerollPlay(item);
@@ -192,18 +209,8 @@ function startPrerollThenPlay(item) {
     countdown.textContent = String(state.prerollRemaining);
     updateSkipText();
 
-    if (state.prerollRemaining <= 0) {
-      finishPrerollPlay(item);
-    }
+    if (state.prerollRemaining <= 0) finishPrerollPlay(item);
   }, 1000);
-}
-
-function finishPrerollPlay(item) {
-  stopPreroll(); // overlay kapat + timer temizle
-
-  const src = buildEmbedUrl(item);
-  const playerEl = $("#player");
-  if (playerEl) playerEl.src = src || "about:blank";
 }
 
 /* =========================
@@ -212,7 +219,6 @@ function finishPrerollPlay(item) {
 function setActive(item) {
   state.activeId = item.id;
 
-  // UI (başlık/meta hemen güncellensin)
   $("#pTitle").textContent = item.title || "Yayın";
 
   const metaBits = [item.category];
@@ -220,12 +226,14 @@ function setActive(item) {
   if (item.time) metaBits.push(item.time);
   $("#pMeta").textContent = metaBits.filter(Boolean).join(" • ");
 
-  // Kaynak butonu (video daha başlamadan link hazır)
+  // ✅ Kaynak butonu (varsa)
   const src = buildEmbedUrl(item);
   const btn = $("#btnSource");
-  btn.href = item.sourceUrl || src || "#";
-  btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
-  btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
+  if (btn) {
+    btn.href = item.sourceUrl || src || "#";
+    btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
+    btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
+  }
 
   // ✅ PREROLL -> sonra video
   startPrerollThenPlay(item);
@@ -234,7 +242,7 @@ function setActive(item) {
 }
 
 /* =========================
-   NATIVE ADS (liste içine)
+   NATIVE ADS
    ========================= */
 function getNativeAdsForTab(tab) {
   const ads = (window.HOPGOAL_ADS && Array.isArray(window.HOPGOAL_ADS.native))
@@ -316,10 +324,7 @@ function render() {
 
   root.innerHTML = "";
 
-  // after=0 en başa
-  if (byAfter.has(0)) {
-    for (const ad of byAfter.get(0)) root.appendChild(nativeNode(ad));
-  }
+  if (byAfter.has(0)) for (const ad of byAfter.get(0)) root.appendChild(nativeNode(ad));
 
   let count = 0;
   for (const item of list) {
@@ -360,16 +365,11 @@ function render() {
     root.appendChild(el);
 
     count++;
-    if (byAfter.has(count)) {
-      for (const ad of byAfter.get(count)) root.appendChild(nativeNode(ad));
-    }
+    if (byAfter.has(count)) for (const ad of byAfter.get(count)) root.appendChild(nativeNode(ad));
   }
 
-  // sona kalanlar
   for (const [after, ads] of byAfter.entries()) {
-    if (after > count) {
-      for (const ad of ads) root.appendChild(nativeNode(ad));
-    }
+    if (after > count) for (const ad of ads) root.appendChild(nativeNode(ad));
   }
 
   if (empty) empty.classList.toggle("hidden", root.children.length !== 0);
@@ -379,18 +379,12 @@ function render() {
    TAB
    ========================= */
 function setTab(tab) {
-  // =========================================================
-  // [TAB SWITCH]
-  // - Sekme değişince SADECE sağdaki liste değişir (Maçlar/Kanallar).
-  // - Aktif yayın KAPANMAZ. (player src about:blank yapılmaz)
-  // =========================================================
   state.tab = tab;
-
   $("#tabMatches").classList.toggle("active", tab === "match");
   $("#tabChannels").classList.toggle("active", tab === "channel");
-
   render();
 }
+
 /* =========================
    LOAD
    ========================= */
@@ -428,7 +422,6 @@ function wire() {
   });
 
   $("#btnClear").addEventListener("click", () => {
-
     stopPreroll();
     state.activeId = null;
     $("#player").src = "about:blank";
@@ -437,15 +430,6 @@ function wire() {
     render();
   });
 }
-// Event’leri bağla
+
 wire();
-
-// Streams’i yükle (hata olursa listeyi boş göster)
-load().catch((err) => {
-  console.warn("[app.js] load() failed:", err);
-  const empty = $("#empty");
-  if (empty) empty.classList.remove("hidden");
-});
-
-
-
+load().catch(() => $("#empty").classList.remove("hidden"));
