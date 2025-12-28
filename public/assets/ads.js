@@ -64,6 +64,38 @@
         { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/banner2", alt: "Top Banner 2" }
       ]
     },
+         // =========================================================
+    // [TOP BANNER GRID] 4'lü üst banner slotları
+    // - live.html içinde: top_banner_1..4
+    // - Şimdilik mevcut banner dosyalarını kullandım (kırılmasın diye)
+    // - Sonra 4 farklı görsel koymak istersen:
+    //   public/ads/ içine yeni dosya atıp image yolunu değiştirmen yeter
+    // =========================================================
+    top_banner_1: {
+      label: "Banner",
+      creatives: [
+        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/top1", alt: "Top Banner 1" }
+      ]
+    },
+    top_banner_2: {
+      label: "Banner",
+      creatives: [
+        { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/top2", alt: "Top Banner 2" }
+      ]
+    },
+    top_banner_3: {
+      label: "Banner",
+      creatives: [
+        { image: "/ads/banner-970x90.gif", clickUrl: "https://example.com/top3", alt: "Top Banner 3" }
+      ]
+    },
+    top_banner_4: {
+      label: "Banner",
+      creatives: [
+        { image: "/ads/banner-970x90-2.gif", clickUrl: "https://example.com/top4", alt: "Top Banner 4" }
+      ]
+    },
+
  // ✅ Player altı banner
     player_banner: {
       label: "Player Banner",
