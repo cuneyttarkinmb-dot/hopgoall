@@ -1,10 +1,8 @@
 // public/assets/standings.js
 // =========================================================
-// [UI] Puan Durumu Widget
-// - /api/standings?code=PL üzerinden puan tablosunu çeker
-// - Üstten lig seçimi
-// - İlk başta ilk 5 takım
-// - Ok tıklanınca tam tablo
+// Puan Durumu UI
+// - /api/standings?code=TR
+// - İlk 5 takım, ok'a basınca tam liste
 // =========================================================
 
 (function () {
@@ -13,12 +11,10 @@
   const sel  = document.getElementById("leagueSelect");
   const tbl  = document.getElementById("standingsTable");
   const tog  = document.getElementById("standingsToggle");
-
-  if (!card || !sel || !tbl) return;
+  if (!card || !sel || !tbl || !tog) return;
 
   const LEAGUES = [
     { code: "TR",  name: "Türkiye • Süper Lig" },
-
     { code: "PL",  name: "İngiltere • Premier League" },
     { code: "PD",  name: "İspanya • LaLiga" },
     { code: "SA",  name: "İtalya • Serie A" },
@@ -28,8 +24,9 @@
     { code: "DED", name: "Hollanda • Eredivisie" },
   ];
 
-  const LS_KEY_LEAGUE = "hopgoal_league_code";
-  const LS_KEY_EXPAND = "hopgoal_standings_expand";
+  const LS_LEAGUE = "hg_league_code";
+  const LS_EXPAND = "hg_standings_expand";
+  let current = null;
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, c => ({
@@ -37,17 +34,29 @@
     }[c]));
   }
 
-  function setExpanded(expanded){
-    card.classList.toggle("expanded", !!expanded);
-    localStorage.setItem(LS_KEY_EXPAND, expanded ? "1" : "0");
-    renderCurrent();
+  function setExpanded(v){
+    card.classList.toggle("expanded", !!v);
+    localStorage.setItem(LS_EXPAND, v ? "1" : "0");
+    render();
   }
 
-  let current = null;
+  function renderError(msg){
+    tbl.innerHTML = `
+      <tbody>
+        <tr><td class="st-error">${esc(msg)}</td></tr>
+      </tbody>
+    `;
+  }
 
-  function renderTable(rows){
+  function render(){
+    if (!current || !current.ok) {
+      renderError(current?.error || "Şu an veri yok");
+      return;
+    }
+
+    const rows = Array.isArray(current.rows) ? current.rows : [];
     const expanded = card.classList.contains("expanded");
-    const showRows = expanded ? rows : rows.slice(0, 5);
+    const show = expanded ? rows : rows.slice(0, 5);
 
     let html = `
       <thead>
@@ -58,6 +67,8 @@
           <th>G</th>
           <th>B</th>
           <th>M</th>
+          <th>A</th>
+          <th>Y</th>
           <th>AV</th>
           <th>P</th>
         </tr>
@@ -65,9 +76,9 @@
       <tbody>
     `;
 
-    for (const r of showRows) {
+    for (const r of show) {
       const crest = esc(r.crest || "");
-      const team  = esc(r.team || "");
+      const team = esc(r.team || "");
       html += `
         <tr>
           <td class="st-pos">${esc(r.pos)}</td>
@@ -79,6 +90,8 @@
           <td>${esc(r.won)}</td>
           <td>${esc(r.draw)}</td>
           <td>${esc(r.lost)}</td>
+          <td>${esc(r.gf)}</td>
+          <td>${esc(r.ga)}</td>
           <td>${esc(r.gd)}</td>
           <td class="st-pts">${esc(r.pts)}</td>
         </tr>
@@ -89,85 +102,44 @@
     tbl.innerHTML = html;
   }
 
-  function renderError(msg){
-    tbl.innerHTML = `
-      <tbody>
-        <tr>
-          <td class="st-error">${esc(msg)}</td>
-        </tr>
-      </tbody>
-    `;
-  }
-
-  function renderCurrent(){
-    if (!current || !current.ok) {
-      renderError(current?.error || "Şu an veri yok");
-      return;
-    }
-    renderTable(Array.isArray(current.rows) ? current.rows : []);
-  }
-
-  async function loadStandings(code){
+  async function load(code){
     try{
       if (meta) meta.textContent = "Güncelleniyor…";
 
-      // 1) API dene
-      const apiUrl = `/api/standings?code=${encodeURIComponent(code)}`;
-      let r = await fetch(apiUrl, { cache: "no-store" });
-      let j = await r.json();
+      const r = await fetch(`/api/standings?code=${encodeURIComponent(code)}`, { cache: "no-store" });
+      const j = await r.json();
       current = j;
-
-      // 2) TR için API boşsa local fallback (opsiyonel)
-      if ((!j.ok || !Array.isArray(j.rows) || j.rows.length === 0) && code === "TR") {
-        try {
-          const r2 = await fetch(`/data/standings-tr.json`, { cache: "no-store" });
-          const j2 = await r2.json();
-          if (j2 && j2.ok) current = j2;
-        } catch(_) {}
-      }
 
       if (!current.ok) {
         if (meta) meta.textContent = "Şu an veri yok";
-        renderCurrent();
+        render();
         return;
       }
 
       const t = new Date(current.updatedAt).toLocaleTimeString("tr-TR", { hour:"2-digit", minute:"2-digit" });
-      if (meta) meta.textContent = `${current.competition?.name || code} • ${t}`;
-
-      renderCurrent();
-    } catch(e){
-      current = { ok:false, error:"Puan durumu yüklenemedi (network)." };
+      if (meta) meta.textContent = `${(current.competition?.name || code)} • ${t}`;
+      render();
+    } catch (e){
+      current = { ok:false, error:"Puan durumu yüklenemedi." };
       if (meta) meta.textContent = "Şu an veri yok";
-      renderCurrent();
+      render();
     }
   }
 
-  function initSelect(){
-    sel.innerHTML = LEAGUES.map(l => `<option value="${esc(l.code)}">${esc(l.name)}</option>`).join("");
+  // Select doldur
+  sel.innerHTML = LEAGUES.map(l => `<option value="${esc(l.code)}">${esc(l.name)}</option>`).join("");
 
-    const saved = localStorage.getItem(LS_KEY_LEAGUE);
-    const startCode = saved || "TR";
-    if (LEAGUES.some(l => l.code === startCode)) sel.value = startCode;
+  const saved = localStorage.getItem(LS_LEAGUE);
+  sel.value = LEAGUES.some(x => x.code === saved) ? saved : "TR";
 
-    sel.addEventListener("change", () => {
-      localStorage.setItem(LS_KEY_LEAGUE, sel.value);
-      loadStandings(sel.value);
-    });
-  }
+  sel.addEventListener("change", () => {
+    localStorage.setItem(LS_LEAGUE, sel.value);
+    load(sel.value);
+  });
 
-  if (tog) {
-    tog.addEventListener("click", () => {
-      const expanded = card.classList.contains("expanded");
-      setExpanded(!expanded);
-    });
-  }
+  tog.addEventListener("click", () => setExpanded(!card.classList.contains("expanded")));
 
-  initSelect();
-
-  const savedExpand = localStorage.getItem(LS_KEY_EXPAND);
-  setExpanded(savedExpand === "1");
-
-  loadStandings(sel.value);
-  setInterval(() => loadStandings(sel.value), 60000);
+  setExpanded(localStorage.getItem(LS_EXPAND) === "1");
+  load(sel.value);
+  setInterval(() => load(sel.value), 60000);
 })();
