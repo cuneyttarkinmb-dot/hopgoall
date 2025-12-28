@@ -1056,3 +1056,46 @@ a{color:inherit}
   color: rgba(234,242,255,.70);
   font-size: 12px;
 }
+/* =========================================================
+   [PLAYER POSTER] Player boşken görünen görsel overlay
+   ========================================================= */
+.player-poster{
+  position: absolute;
+  inset: 0;
+  z-index: 10; /* iframe üstü, preroll (20) altı */
+  display: grid;
+  place-items: center;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Hafif koyu katman (görsel üstüne yazılar buton net dursun) */
+.player-poster::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.35);
+}
+
+/* Ortadaki play butonu */
+.player-poster-btn{
+  position: relative;
+  z-index: 1;
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  font-size: 34px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(6px);
+}
+
+.player-poster-btn:hover{
+  transform: scale(1.03);
+}
