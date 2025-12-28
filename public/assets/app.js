@@ -392,22 +392,31 @@ function render() {
    TAB
    ========================= */
 function setTab(tab) {
+  // =========================================================
+  // [TAB SWITCH]
+  // Eskiden: Sekme değişince aktif yayın listeye uymuyorsa player sıfırlanıyordu.
+  // Bu da "Kanallar" sekmesine basınca yayını kapatıp poster gösteriyordu.
+  //
+  // Yeni: Sekme değişince aktif yayın KAPANMAZ.
+  // Sadece sağdaki liste değişir (maçlar/kanallar).
+  // =========================================================
   state.tab = tab;
 
   $("#tabMatches").classList.toggle("active", tab === "match");
   $("#tabChannels").classList.toggle("active", tab === "channel");
 
-  const list = filteredList();
-  if (!list.some(x => x.id === state.activeId)) {
-    state.activeId = null;
-    $("#player").src = "about:blank";
-    $("#pTitle").textContent = "Bir yayın seç";
-    $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
-  }
-    // Player boş -> poster göster
-    setPosterVisible(true);
+  // YAYINI KESME! (player src = about:blank yok)
+  // state.activeId olduğu gibi kalır, video devam eder.
+
   render();
+
+  // Eğer hiç aktif yayın yoksa poster görünür kalsın.
+  // (Bu satır setPosterVisible fonksiyonunu eklediysen çalışır)
+  if (typeof setPosterVisible === "function") {
+    setPosterVisible(!state.activeId);
+  }
 }
+
 
 /* =========================
    LOAD
