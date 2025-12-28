@@ -437,13 +437,15 @@ function wire() {
     render();
   });
 }
-
+// Event’leri bağla
 wire();
 
-  }
-
-load().catch(() => {
-  $("#empty").classList.remove("hidden");
+// Streams’i yükle (hata olursa listeyi boş göster)
+load().catch((err) => {
+  console.warn("[app.js] load() failed:", err);
+  const empty = $("#empty");
+  if (empty) empty.classList.remove("hidden");
 });
+
 
 
