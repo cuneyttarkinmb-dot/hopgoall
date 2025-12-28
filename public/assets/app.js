@@ -36,6 +36,20 @@ const state = {
   prerollRemaining: 0,
   prerollItem: null,
 };
+/* =========================================================
+   [PLAYER POSTER CONTROL]
+   - Poster, player boşken görünür
+   - Yayın seçilince gizlenir
+   ========================================================= */
+const posterEl = () => document.querySelector("#playerPoster");
+const posterBtnEl = () => document.querySelector("#playerPosterBtn");
+
+function setPosterVisible(visible) {
+  const el = posterEl();
+  if (!el) return;
+  el.classList.toggle("hidden", !visible);
+}
+
 
 function safeText(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set(arr)].filter(Boolean); }
@@ -224,7 +238,8 @@ function setActive(item) {
   btn.href = item.sourceUrl || src || "#";
   btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
   btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
-
+  // Yayın seçildi -> poster gizle
+  setPosterVisible(false);
   // ✅ PREROLL -> sonra video
   startPrerollThenPlay(item);
 
@@ -389,7 +404,8 @@ function setTab(tab) {
     $("#pTitle").textContent = "Bir yayın seç";
     $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
   }
-
+    // Player boş -> poster göster
+    setPosterVisible(true);
   render();
 }
 
@@ -430,6 +446,8 @@ function wire() {
   });
 
   $("#btnClear").addEventListener("click", () => {
+         // Player boş -> poster göster
+    setPosterVisible(true);
     stopPreroll();
     state.activeId = null;
     $("#player").src = "about:blank";
@@ -440,6 +458,24 @@ function wire() {
 }
 
 wire();
+  // Poster üzerindeki ▶ tıklanınca:
+  // - aktif yayın varsa yeniler
+  // - yoksa bir şey yapmaz
+  const pb = posterBtnEl();
+  if (pb) {
+    pb.addEventListener("click", () => {
+      const current = state.all.find(x => x.id === state.activeId);
+      if (!current) return;
+
+      const src = buildEmbedUrl(current);
+      setPosterVisible(false); // yenilemeye başlarken gizle
+      $("#player").src = "about:blank";
+      setTimeout(() => { $("#player").src = src || "about:blank"; }, 80);
+       // İlk açılışta player boş -> poster açık başlasın
+setPosterVisible(true);
+    });
+  }
+
 load().catch(() => {
   $("#empty").classList.remove("hidden");
 });
