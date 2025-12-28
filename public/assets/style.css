@@ -1099,3 +1099,21 @@ a{color:inherit}
 .player-poster-btn:hover{
   transform: scale(1.03);
 }
+/* Header logo */
+.brand{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-logo{
+  height: 32px;     /* header yüksekliğine göre ayarla */
+  width: auto;
+  display: block;
+  user-select: none;
+}
+
+.brand-logo:hover{
+  transform: translateY(-1px);
+}
