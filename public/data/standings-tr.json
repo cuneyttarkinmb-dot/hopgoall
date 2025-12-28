@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "updatedAt": "2025-12-28T00:00:00.000Z",
+  "competition": { "code": "TR", "name": "Türkiye • Süper Lig" },
+  "rows": [
+    { "pos": 1, "team": "Galatasaray", "crest": "", "played": 17, "won": 14, "draw": 2, "lost": 1, "gd": 25, "pts": 44 },
+    { "pos": 2, "team": "Fenerbahçe",  "crest": "", "played": 17, "won": 13, "draw": 3, "lost": 1, "gd": 22, "pts": 42 },
+    { "pos": 3, "team": "Beşiktaş",   "crest": "", "played": 17, "won": 10, "draw": 4, "lost": 3, "gd": 12, "pts": 34 },
+    { "pos": 4, "team": "Trabzonspor","crest": "", "played": 17, "won": 9,  "draw": 5, "lost": 3, "gd": 10, "pts": 32 },
+    { "pos": 5, "team": "Başakşehir", "crest": "", "played": 17, "won": 8,  "draw": 6, "lost": 3, "gd": 6,  "pts": 30 }
+  ]
+}
