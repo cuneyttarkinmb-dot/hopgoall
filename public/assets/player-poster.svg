@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071018"/>
+      <stop offset="0.5" stop-color="#0b1422"/>
+      <stop offset="1" stop-color="#1a0f2a"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.25"/>
+      <stop offset="0.45" stop-color="#60a5fa" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.7 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#glow)"/>
+
+  <!-- Subtle grid -->
+  <g opacity="0.08">
+    <path d="M0 120H1280M0 240H1280M0 360H1280M0 480H1280M0 600H1280" stroke="#fff" stroke-width="1"/>
+    <path d="M160 0V720M320 0V720M480 0V720M640 0V720M800 0V720M960 0V720M1120 0V720" stroke="#fff" stroke-width="1"/>
+  </g>
+
+  <!-- Center card -->
+  <g filter="url(#shadow)">
+    <rect x="210" y="190" width="860" height="340" rx="26" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.10)"/>
+  </g>
+
+  <!-- HopGoal text -->
+  <g filter="url(#softGlow)">
+    <text x="640" y="360"
+          font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+          font-size="110" font-weight="800"
+          text-anchor="middle" fill="#EAF2FF" letter-spacing="2">
+      HopGoal
+    </text>
+    <text x="640" y="420"
+          font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+          font-size="26" font-weight="500"
+          text-anchor="middle" fill="rgba(234,242,255,0.75)">
+      Canlı Yayın • Maç seç, izlemeye başla
+    </text>
+  </g>
+
+  <!-- Bottom hint -->
+  <text x="640" y="630"
+        font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+        font-size="18" font-weight="500"
+        text-anchor="middle" fill="rgba(255,255,255,0.55)">
+    Player boşken bu görsel görünür • Yayın açılınca otomatik kaybolur
+  </text>
+</svg>
