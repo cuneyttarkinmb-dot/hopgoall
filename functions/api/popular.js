@@ -112,7 +112,8 @@ export async function onRequestGet({ env }) {
   // “Popüler” seçimi:
   // 1) canlılar öne
   // 2) kalanlar: en yakın başlayacaklar
-  filtered.sort((a, b) => {
+  filteredActive.sort((a, b) => {
+
     if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
     return (a.utcDate || "").localeCompare(b.utcDate || "");
   });
@@ -121,10 +122,18 @@ export async function onRequestGet({ env }) {
 // football-data status örnekleri: SCHEDULED, TIMED, IN_PLAY, PAUSED, FINISHED, AWARDED, POSTPONED...
 // Biz "biten"leri (FINISHED + AWARDED) göstermiyoruz.
 // =========================================================
-const filtered = filtered.filter(m => m.status !== "FINISHED" && m.status !== "AWARDED");
+// =========================================================
+// [FILTER] Biten maçları listeden çıkar
+// FINISHED: maç bitti
+// AWARDED : hükmen / karar ile bitti (bunu da göstermiyoruz)
+// =========================================================
+const filteredActive = filtered.filter(m =>
+  m.status !== "FINISHED" && m.status !== "AWARDED"
+);
 
 
-  const top5 = filtered.slice(0, 5);
+
+  const top5 = filteredActive.slice(0, 5);
 
   return new Response(JSON.stringify({
     ok: true,
