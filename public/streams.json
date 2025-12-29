@@ -6,8 +6,8 @@
       "kind": "channel",
       "title": "Maç 1",
       "category": "News",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/watch?v=YfYXn_qpGsY&list=RDYfYXn_qpGsY&start_radio=1",
+      "provider": "Cloudflare",
+      "youtubeEmbedUrl": "https://earning-situated-crops-tiny.trycloudflare.com/myplayer.html",
       "sourceUrl": "https://www.youtube.com/",
       "isLive": true,
       "tags": ["youtube"]
