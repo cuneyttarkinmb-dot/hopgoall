@@ -386,18 +386,53 @@ function setTab(tab) {
 }
 
 /* =========================
-   LOAD
+   LOAD (REMOTE SHEET + FALLBACK LOCAL)
    ========================= */
 async function load() {
-  const res = await fetch("./streams.json", { cache: "no-store" });
-  const data = await res.json();
-  state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
+  // 1) Önce local streams.json ile hızlı aç (site boş kalmasın)
+  // 2) Sonra /api/streams gelirse override et (sheet’ten güncel liste)
+  async function loadLocal() {
+    const res = await fetch("./streams.json", { cache: "no-store" });
+    const data = await res.json();
+    state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
+  }
 
+  async function loadRemote() {
+    const r = await fetch("/api/streams", { cache: "no-store" });
+    const j = await r.json();
+    if (j && j.ok && Array.isArray(j.streams)) {
+      state.all = j.streams.map(normalize);
+      return true;
+    }
+    return false;
+  }
+
+  // İlk görüntü için local
+  await loadLocal();
   setTab("match");
   const first = filteredList()[0] || null;
   if (first) setActive(first);
   render();
+
+  // Arkadan remote dene (sheet)
+  try {
+    const ok = await loadRemote();
+    if (ok) {
+      // remote geldiyse UI’yı yenile
+      setTab(state.tab || "match");
+      render();
+      // aktif item yoksa ilkini seç
+      if (!state.activeId) {
+        const f2 = filteredList()[0] || null;
+        if (f2) setActive(f2);
+      }
+    }
+  } catch (e) {
+    // remote yoksa sorun değil, local ile devam
+    console.warn("remote streams failed:", e);
+  }
 }
+
 
 /* =========================
    WIRE
