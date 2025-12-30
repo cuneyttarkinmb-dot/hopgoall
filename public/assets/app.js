@@ -392,7 +392,7 @@ async function load() {
   // 1) Önce local streams.json ile hızlı aç (site boş kalmasın)
   // 2) Sonra /api/streams gelirse override et (sheet’ten güncel liste)
   async function loadLocal() {
-    const res = await fetch("./streams.json", { cache: "no-store" });
+    const res = await fetch("/streams.json", { cache: "no-store" });
     const data = await res.json();
     state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
   }
@@ -400,8 +400,14 @@ async function load() {
   async function loadRemote() {
     const r = await fetch("/api/streams", { cache: "no-store" });
     const j = await r.json();
-    if (j && j.ok && Array.isArray(j.streams)) {
-      state.all = j.streams.map(normalize);
+    // Beklenen format: { ok:true, streams:[...] }
+    // Bazı durumlarda anahtar farklı gelebilir: data/items
+    const streams = Array.isArray(j?.streams)
+      ? j.streams
+      : (Array.isArray(j?.data) ? j.data : (Array.isArray(j?.items) ? j.items : null));
+
+    if (j && j.ok && streams) {
+      state.all = streams.map(normalize);
       return true;
     }
     return false;
