@@ -16,11 +16,24 @@ function safeText(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set(arr)].filter(Boolean); }
 
 function toBool(v) {
-  if (v === true) return true;
-  if (v === false) return false;
-  if (v === 1 || v === "1") return true;
+  // number
+  if (v === 1) return true;
+  if (v === 0) return false;
+
+  // string / other
   const t = String(v ?? "").trim().toLowerCase();
-  return t === "true" || t === "yes" || t === "y" || t === "on";
+
+  // accept 1/0 even if it's text (e.g. "1 ", "0")
+  if (t === "1") return true;
+  if (t === "0") return false;
+
+  // accept common true/false words
+  if (t === "true" || t === "yes" || t === "y" || t === "on") return true;
+  if (t === "false" || t === "no" || t === "n" || t === "off") return false;
+
+  return false;
+}
+
 }
 
 function setEmpty(msgTitle, msgText) {
