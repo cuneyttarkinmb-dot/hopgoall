@@ -1346,4 +1346,4 @@ a{color:inherit}
 }
 
 /* Liste boşken çıkan "Sonuç yok" overlay'i sekmelere tıklamayı engellemesin */
-.empty { pointer-events: none; }
+#empty, .empty { pointer-events: none; }
