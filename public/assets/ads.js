@@ -1,8 +1,8 @@
 /* =========================================================
    HopGoal Ads (FAST RENDER + REMOTE SHEETS)
-   - İlk anda LOCAL reklamlari basar (boşluk kalmaz)
-   - Remote (/api/ads) gelince sadece img src/href günceller (flicker azalır)
-   - Basit preload ile görsel daha hızlı gelir
+   - LOCAL fallback ile boşluk bırakmaz
+   - Remote (/api/ads) gelince günceller
+   - enabled=0 olan slotları GÖSTERMEZ (preroll dahil)
    ========================================================= */
 
 (function () {
@@ -19,17 +19,33 @@
     return (Date.now() - n) / 60000;
   }
 
+  // enabled yorumlama:
+  // - 0 / "0" / false => kapalı
+  // - boş / undefined => açık (geriye dönük uyum)
+  function isEnabled(v) {
+    if (v === undefined || v === null) return true;
+    const s = String(v).trim().toLowerCase();
+    if (s === "") return true;
+    if (s === "0" || s === "false" || s === "no") return false;
+    return true;
+  }
+
+  function asNum(v, fallback) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
   // =========================
   // LOCAL fallback config
   // =========================
   const ADS = window.HOPGOAL_ADS || {
-    top_banner: { label: "Banner", creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Top Banner" }] },
-    player_banner: { label: "Player Banner", creatives: [{ image: "/ads/banner-970x90-2.gif", clickUrl: "#", alt: "Player Banner" }] },
-    sidebar_rectangle: { label: "Sidebar", creatives: [{ image: "/ads/sidebar-300x250.gif", clickUrl: "#", alt: "Sidebar" }] },
-    floating: { label: "Bottom Banner", showAfterMs: 1200, creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Bottom" }] },
-    interstitial: { label: "Interstitial", showAfterMs: 1200, frequencyMinutes: 60, creatives: [{ image: "/ads/interstitial-900x500.gif", clickUrl: "#", alt: "Interstitial" }] },
-    bg_left: { label: "BG Left", creatives: [{ image: "/ads/bg-left-600x1400.jpg", clickUrl: "#", alt: "BG Left" }] },
-    bg_right: { label: "BG Right", creatives: [{ image: "/ads/bg-right-600x1400.jpg", clickUrl: "#", alt: "BG Right" }] },
+    top_banner: { label: "Banner", enabled: true, creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Top Banner" }] },
+    player_banner: { label: "Player Banner", enabled: true, creatives: [{ image: "/ads/banner-970x90-2.gif", clickUrl: "#", alt: "Player Banner" }] },
+    sidebar_rectangle: { label: "Sidebar", enabled: true, creatives: [{ image: "/ads/sidebar-300x250.gif", clickUrl: "#", alt: "Sidebar" }] },
+    floating: { label: "Bottom Banner", enabled: true, showAfterMs: 1200, creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Bottom" }] },
+    interstitial: { label: "Interstitial", enabled: true, showAfterMs: 1200, frequencyMinutes: 60, creatives: [{ image: "/ads/interstitial-900x500.gif", clickUrl: "#", alt: "Interstitial" }] },
+    bg_left: { label: "BG Left", enabled: true, creatives: [{ image: "/ads/bg-left-600x1400.jpg", clickUrl: "#", alt: "BG Left" }] },
+    bg_right: { label: "BG Right", enabled: true, creatives: [{ image: "/ads/bg-right-600x1400.jpg", clickUrl: "#", alt: "BG Right" }] },
     native: [],
     preroll: { enabled: true, durationSeconds: 15, skippableLastSeconds: 5, creatives: [{ image: "/ads/preroll-800x450.gif", clickUrl: "#", alt: "PreRoll" }] },
     popup: { enabled: false },
@@ -54,7 +70,6 @@
     img.src = url;
   }
 
-  // Slot elementlerini "swap" etmek için işaretliyoruz
   function ensureSlotShell(el, slotName) {
     if (el.dataset.adReady === "1") return;
 
@@ -68,21 +83,31 @@
     el.dataset.adSlotName = slotName;
   }
 
+  function clearSlot(el) {
+    el.innerHTML = "";
+    el.dataset.adReady = "0";
+  }
+
   function updateSlot(el, slotName) {
     const s = ADS[slotName];
     if (!s) return;
 
+    // enabled=0 ise slotu temizle
+    if (!isEnabled(s.enabled)) {
+      clearSlot(el);
+      return;
+    }
+
     const c = pick(slotName) || {};
     const imgUrl = (c.image || "").trim();
 
-    // image yoksa temizle
     if (!imgUrl) {
-      el.innerHTML = "";
+      clearSlot(el);
+     AlignedSandboxedAds??;
       return;
     }
 
     preloadImage(imgUrl);
-
     ensureSlotShell(el, slotName);
 
     const labelEl = el.querySelector(".ad-label");
@@ -104,6 +129,7 @@
     const slot = ADS.interstitial;
     const wrap = document.getElementById("adInterstitial");
     if (!slot || !wrap) return;
+    if (!isEnabled(slot.enabled)) return;
 
     const last = localStorage.getItem(LS.interstitial);
     if (minutesSince(last) < (slot.frequencyMinutes || 60)) return;
@@ -134,6 +160,7 @@
     const slot = ADS.floating;
     const wrap = document.getElementById("adFloating");
     if (!slot || !wrap) return;
+    if (!isEnabled(slot.enabled)) return;
 
     if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
 
@@ -163,7 +190,7 @@
     document.querySelectorAll("[data-ad-slot]").forEach((el) => {
       const slot = el.getAttribute("data-ad-slot");
       if (!slot) return;
-      if (slot === "floating") return; // özel kuruyoruz
+      if (slot === "floating") return;
       updateSlot(el, slot);
     });
 
@@ -183,15 +210,25 @@
       const remote = remoteSlots[slotName];
       if (!remote) return;
 
-      const creatives = Array.isArray(remote.creatives) ? remote.creatives : null;
-      const label = typeof remote.label === "string" ? remote.label : null;
+      if (!ADS[slotName]) ADS[slotName] = { label: "Reklam", enabled: true, creatives: [] };
 
-      if (!ADS[slotName]) ADS[slotName] = { label: label || "Reklam", creatives: creatives || [] };
-      if (label) ADS[slotName].label = label;
-      if (creatives) ADS[slotName].creatives = creatives;
+      // label
+      if (typeof remote.label === "string") ADS[slotName].label = remote.label;
 
-      // remote creatives varsa preload
-      if (creatives) creatives.forEach(c => preloadImage((c.image || "").trim()));
+      // enabled (0/1)
+      if ("enabled" in remote) ADS[slotName].enabled = remote.enabled;
+
+      // creatives
+      if (Array.isArray(remote.creatives)) {
+        ADS[slotName].creatives = remote.creatives;
+        remote.creatives.forEach((c) => preloadImage((c.image || "").trim()));
+      }
+
+      // preroll / timing / frequency / showAfter gibi alanlar (varsa)
+      if ("durationSeconds" in remote) ADS[slotName].durationSeconds = asNum(remote.durationSeconds, ADS[slotName].durationSeconds);
+      if ("skippableLastSeconds" in remote) ADS[slotName].skippableLastSeconds = asNum(remote.skippableLastSeconds, ADS[slotName].skippableLastSeconds);
+      if ("showAfterMs" in remote) ADS[slotName].showAfterMs = asNum(remote.showAfterMs, ADS[slotName].showAfterMs);
+      if ("frequencyMinutes" in remote) ADS[slotName].frequencyMinutes = asNum(remote.frequencyMinutes, ADS[slotName].frequencyMinutes);
     });
   }
 
@@ -200,33 +237,15 @@
       const r = await fetch("/api/ads", { cache: "no-store" });
       const j = await r.json();
       if (!j || !j.ok || !j.slots) return;
-
       mergeRemoteSlots(j.slots);
-
-      // ✅ PREROLL'u da Sheets'ten al (varsa)
-      if (j.preroll && typeof j.preroll === "object") {
-        ADS.preroll = j.preroll;
-
-        // preroll creative'lerini de preload et
-        if (Array.isArray(ADS.preroll.creatives)) {
-          ADS.preroll.creatives.forEach(c => preloadImage((c.image || "").trim()));
-        }
-      }
-
-      // Remote geldikten sonra sadece güncelle
       applyAds();
-
-
-       
     } catch (e) {
       console.warn("[ads.js] remote ads failed:", e);
     }
   }
 
   function init() {
-    // İlk anda LOCAL bas
     applyAds();
-    // Remote gelince sadece swap
     loadRemoteAds();
   }
 
