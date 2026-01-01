@@ -1,23 +1,19 @@
 // functions/api/player.js
-<<<<<<< HEAD
-// =========================================================
 // /api/player
-// Amaç: iframe src içinde gerçek upstream linki göstermemek
-// - Varsayılan upstream: env.PLAYER_UPSTREAM_URL
-// - İsteğe bağlı: ?u=<base64url(upstreamUrl)>
-// - Referer kontrolü ile direkt açmayı zorlaştırır
-// - Host whitelist ile "open proxy" olmasın
-// =========================================================
+// iframe src içinde gerçek upstream linki göstermemek için proxy.
+// Env:
+// - PLAYER_UPSTREAM_URL (zorunlu)
+// - ALLOWED_REF (opsiyonel)  ör: hopgoal.pages.dev
+// - PLAYER_ALLOWED_HOSTS (opsiyonel) ör: trycloudflare.com,example.com
 
 function b64UrlToStr(b64url) {
   try {
     const b64 = String(b64url || "").replace(/-/g, "+").replace(/_/g, "/");
     const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
     const bin = atob(b64 + pad);
-    // UTF-8 decode
     const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
     return new TextDecoder("utf-8").decode(bytes);
-  } catch (e) {
+  } catch {
     return "";
   }
 }
@@ -35,7 +31,7 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const token = url.searchParams.get("u");
 
-  // Referer kontrolü (kolay aşılır ama direkt link açmayı azaltır)
+  // Referer kontrolü (tam koruma değil, sadece “kolay açmayı” azaltır)
   const ref = request.headers.get("referer") || "";
   const allowedRef = (env.ALLOWED_REF || "").trim(); // ör: hopgoal.pages.dev
   if (allowedRef && !ref.includes(allowedRef)) {
@@ -43,54 +39,30 @@ export async function onRequestGet({ request, env }) {
   }
 
   let upstream = (env.PLAYER_UPSTREAM_URL || "").trim();
-
   if (token) {
     const decoded = b64UrlToStr(token);
     if (decoded) upstream = decoded;
   }
 
-=======
-// Amaç: myplayer.html'i kendi domaininden serve etmek.
-// Böylece inspect'te trycloudflare linkin görünmez.
+  if (!upstream) return new Response("PLAYER_UPSTREAM_URL env yok", { status: 500 });
 
-export async function onRequestGet({ request, env }) {
-  const upstream = env.PLAYER_UPSTREAM_URL; // ör: https://xxxxx.trycloudflare.com/myplayer.html
->>>>>>> ea5a1487894330985b071eeed7cccb7225f17105
-  if (!upstream) {
-    return new Response("PLAYER_UPSTREAM_URL env yok", { status: 500 });
-  }
-
-<<<<<<< HEAD
   let upstreamUrl;
   try {
     upstreamUrl = new URL(upstream);
-  } catch (e) {
+  } catch {
     return new Response("Bad upstream url", { status: 400 });
   }
 
-  // Host whitelist (virgülle)
+  // Host whitelist
   const allowHostsRaw = (env.PLAYER_ALLOWED_HOSTS || "").trim();
   let allowHosts = allowHostsRaw ? allowHostsRaw.split(",") : [];
-  if (allowHosts.length === 0) {
-    // env yoksa minimum güvenli varsayılan
-    allowHosts = ["trycloudflare.com"];
-  }
+  if (allowHosts.length === 0) allowHosts = ["trycloudflare.com"];
 
   if (!hostAllowed(upstreamUrl.hostname, allowHosts)) {
     return new Response("Upstream host not allowed", { status: 403 });
   }
 
   const r = await fetch(upstreamUrl.toString(), {
-=======
-  // Basit "direct open" engeli (kolay aşılabilir ama işe yarar)
-  const ref = request.headers.get("referer") || "";
-  const allowed = (env.ALLOWED_REF || "").trim(); // ör: hopgoal.pages.dev
-  if (allowed && !ref.includes(allowed)) {
-    return new Response("Forbidden", { status: 403 });
-  }
-
-  const r = await fetch(upstream, {
->>>>>>> ea5a1487894330985b071eeed7cccb7225f17105
     headers: { "user-agent": request.headers.get("user-agent") || "" },
   });
 
