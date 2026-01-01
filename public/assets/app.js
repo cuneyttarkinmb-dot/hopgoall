@@ -115,7 +115,7 @@ function normalize(item) {
     sourceUrl: safeText(item.sourceUrl || ""),
   };
 }
-}
+
 
 /* =========================
    FILTER
