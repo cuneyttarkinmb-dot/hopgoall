@@ -1347,3 +1347,4 @@ a{color:inherit}
 
 /* Liste boşken çıkan "Sonuç yok" overlay'i sekmelere tıklamayı engellemesin */
 #empty, .empty { pointer-events: none; }
+.tabs { position: relative; z-index: 5; }
