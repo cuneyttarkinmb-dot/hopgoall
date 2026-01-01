@@ -14,6 +14,67 @@ const state = {
   prerollRemaining: 0,
   prerollItem: null,
 };
+function isHlsUrl(u) {
+  return /\.m3u8($|\?)/i.test(String(u || ""));
+}
+
+function stopAllPlayers() {
+  const iframe = document.getElementById("player");
+  const video = document.getElementById("hlsPlayer");
+
+  // iframe durdur
+  if (iframe) iframe.src = "about:blank";
+
+  // video durdur
+  if (video) {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  }
+
+  // hls.js instance temizle
+  if (window.__hlsInstance) {
+    try { window.__hlsInstance.destroy(); } catch {}
+    window.__hlsInstance = null;
+  }
+}
+
+function playHls(url) {
+  const video = document.getElementById("hlsPlayer");
+  const iframe = document.getElementById("player");
+  if (!video || !iframe) return;
+
+  // iframe gizle, video göster
+  iframe.classList.add("hidden");
+  video.classList.remove("hidden");
+
+  stopAllPlayers(); // temiz bir başlangıç
+
+  // Safari iOS/macOS çoğu zaman native oynatır
+  if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+    video.play().catch(()=>{});
+    return;
+  }
+
+  // Diğer tarayıcılar: hls.js
+  if (window.Hls && window.Hls.isSupported()) {
+    const hls = new window.Hls({
+      lowLatencyMode: true,
+      backBufferLength: 30,
+    });
+    window.__hlsInstance = hls;
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+      video.play().catch(()=>{});
+    });
+    return;
+  }
+
+  // Destek yoksa
+  console.warn("HLS desteklenmiyor:", url);
+}
 
 function safeText(s) { return String(s ?? "").trim(); }
 
