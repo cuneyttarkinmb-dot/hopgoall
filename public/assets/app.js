@@ -7,86 +7,62 @@ const state = {
   tab: "match",
   onlyLive: true,
   activeId: null,
-  debug: (new URLSearchParams(location.search).get("debug") === "1"),
-  uiHideTimer: null,
-
-  // PREROLL state
   prerollTimer: null,
   prerollRemaining: 0,
   prerollItem: null,
 };
 
-function isRowEnabled(v) {
-  if (v === undefined || v === null) return true;
-  const s = String(v).trim().toLowerCase();
-  if (s === "") return true;
-  if (s === "0" || s === "false" || s === "no") return false;
-  return true;
-}
-
 function safeText(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set(arr)].filter(Boolean); }
+
+function toBool(v) {
+  if (v === true) return true;
+  if (v === false) return false;
+  if (v === 1 || v === "1") return true;
+  const t = String(v ?? "").trim().toLowerCase();
+  return t === "true" || t === "yes" || t === "y" || t === "on";
+}
+
+function setEmpty(msgTitle, msgText) {
+  const empty = $("#empty");
+  if (!empty) return;
+  empty.classList.remove("hidden");
+  empty.innerHTML = `<b>${msgTitle}</b><div>${msgText}</div>`;
+}
+
+function hideEmptyIfListHasItems() {
+  const empty = $("#empty");
+  const root = $("#list");
+  if (!empty || !root) return;
+  empty.classList.toggle("hidden", root.children.length !== 0);
+}
 
 function twitchEmbedUrl(channel) {
   const parent = encodeURIComponent(location.hostname);
   return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${parent}&autoplay=true`;
 }
 
-/* =========================
-   ✅ YouTube: watch / youtu.be -> embed URL
-   ========================= */
 function youtubeToEmbedUrl(raw) {
   if (!raw) return "";
   try {
     const u = new URL(raw);
-
-    // youtu.be/VIDEO_ID
     if (u.hostname.includes("youtu.be")) {
       const vid = u.pathname.replace("/", "");
       if (!vid) return "";
       return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&playsinline=1&rel=0`;
     }
-
-    // youtube.com/watch?v=VIDEO_ID
     const v = u.searchParams.get("v");
-    if (v) {
-      return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&playsinline=1&rel=0`;
-    }
-
-    // youtube.com/embed/VIDEO_ID
+    if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&playsinline=1&rel=0`;
     if (u.pathname.startsWith("/embed/")) {
       const parts = u.pathname.split("/");
       const vid = parts[2] || "";
       if (!vid) return "";
       return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&playsinline=1&rel=0`;
     }
-
     return raw;
   } catch {
     return raw;
   }
-}
-
-function b64UrlEncode(str) {
-  try {
-    // UTF-8 safe base64url
-    const b64 = btoa(unescape(encodeURIComponent(str)));
-    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-  } catch (e) {
-    return "";
-  }
-}
-
-function shouldProxyEmbed(url) {
-  const u = String(url || "");
-  // trycloudflare gibi geçici domainleri DOM'da göstermemek için
-  return /trycloudflare\.com/i.test(u) || /\/myplayer\.html/i.test(u) || /\.html(\?|#|$)/i.test(u);
-}
-
-function wrapPlayerProxy(embedUrl) {
-  const token = b64UrlEncode(embedUrl);
-  if (!token) return embedUrl || "";
-  return `/api/player?u=${encodeURIComponent(token)}`;
 }
 
 function buildEmbedUrl(item) {
@@ -95,38 +71,48 @@ function buildEmbedUrl(item) {
     return youtubeToEmbedUrl(raw);
   }
   if (item.provider === "twitch") return item.twitchChannel ? twitchEmbedUrl(item.twitchChannel) : "";
-  const raw = item.embedUrl || "";
-  return shouldProxyEmbed(raw) ? wrapPlayerProxy(raw) : raw;
+  return item.embedUrl || "";
 }
 
-
 function normalize(item) {
-  const kind = safeText(item.kind || item.type || "channel");
-  const enabled = isRowEnabled(item.enabled);
+  const kindRaw = safeText(item.kind || item.type || "channel").toLowerCase();
+  const kind = (kindRaw === "match") ? "match" : "channel";
+
+  const enabled = toBool(item.enabled);
+  const isLive = toBool(item.isLive);
+
   return {
     ...item,
+    kind,
     enabled,
-    kind: (kind === "match" ? "match" : "channel"),
-    title: safeText(item.title),
+    isLive,
+    title: safeText(item.title || "Yayın"),
     category: safeText(item.category || "Other"),
     league: safeText(item.league || ""),
     time: safeText(item.time || ""),
-    isLive: !!item.isLive,
     sourceUrl: safeText(item.sourceUrl || ""),
+    embedUrl: safeText(item.embedUrl || ""),
+    provider: safeText(item.provider || "embed"),
+    tags: Array.isArray(item.tags)
+      ? item.tags
+      : safeText(item.tags || "").split(",").map(s => safeText(s)).filter(Boolean),
   };
 }
 
-
-/* =========================
-   FILTER
-   ========================= */
+/* FILTER */
 function filteredList() {
-  const qEl = $("#q");
-  const q = safeText(qEl ? qEl.value : "").toLowerCase();
+  const q = safeText($("#q")?.value || "").toLowerCase();
 
-  let list = state.all.filter(x => x.kind === state.tab);
+  // sadece enabled=1 göster
+  let list = state.all.filter(x => x.enabled);
+
+  // tab filtre
+  list = list.filter(x => x.kind === state.tab);
+
+  // sadece canlı
   if (state.onlyLive) list = list.filter(x => x.isLive);
 
+  // arama
   if (q) {
     list = list.filter(x => {
       const blob = [
@@ -136,15 +122,14 @@ function filteredList() {
       return blob.includes(q);
     });
   }
+
   return list;
 }
 
-/* =========================================================
-   PREROLL
-   ========================================================= */
+/* PREROLL */
 function getPrerollConfig() {
   const cfg = window.HOPGOAL_ADS && window.HOPGOAL_ADS.preroll ? window.HOPGOAL_ADS.preroll : null;
-  if (!cfg || !cfg.enabled) return null;
+  if (!cfg || !toBool(cfg.enabled)) return null;
 
   const duration = Number(cfg.durationSeconds ?? 15);
   const last = Number(cfg.skippableLastSeconds ?? 5);
@@ -166,7 +151,6 @@ function stopPreroll() {
   }
   state.prerollRemaining = 0;
   state.prerollItem = null;
-
   const pr = $("#preRoll");
   if (pr) pr.classList.add("hidden");
 }
@@ -182,7 +166,6 @@ function startPrerollThenPlay(item) {
   const cfg = getPrerollConfig();
   const playerEl = $("#player");
 
-  // PREROLL kapalıysa direkt oynat
   if (!cfg) {
     const src = buildEmbedUrl(item);
     if (playerEl) playerEl.src = src || "about:blank";
@@ -190,8 +173,6 @@ function startPrerollThenPlay(item) {
   }
 
   stopPreroll();
-
-  // iframe’i boş bırak (reklam bitene kadar video yüklenmesin)
   if (playerEl) playerEl.src = "about:blank";
 
   const pr = $("#preRoll");
@@ -200,27 +181,24 @@ function startPrerollThenPlay(item) {
   const countdown = $("#preRollCountdown");
   const skipBtn = $("#preRollSkip");
 
-  // overlay yoksa direkt oynat
   if (!pr || !img || !link || !countdown || !skipBtn) {
     const src = buildEmbedUrl(item);
     if (playerEl) playerEl.src = src || "about:blank";
     return;
   }
 
-  // creative bas
   img.src = cfg.creative.image || "";
   img.alt = cfg.creative.alt || "Reklam";
   link.href = cfg.creative.clickUrl || "#";
 
-  // süreyi başlat
   state.prerollItem = item;
   state.prerollRemaining = cfg.durationSeconds;
 
   pr.classList.remove("hidden");
   countdown.textContent = String(state.prerollRemaining);
 
-  // skip mantığı: SON X SANİYE KALINCA aktif
   const enableSkipAt = cfg.skippableLastSeconds;
+
   function updateSkipText() {
     if (state.prerollRemaining <= enableSkipAt) {
       skipBtn.disabled = false;
@@ -231,6 +209,7 @@ function startPrerollThenPlay(item) {
       skipBtn.textContent = `${wait} sn sonra geç`;
     }
   }
+
   updateSkipText();
 
   skipBtn.onclick = () => {
@@ -238,7 +217,6 @@ function startPrerollThenPlay(item) {
     finishPrerollPlay(item);
   };
 
-  // sayaç
   state.prerollTimer = setInterval(() => {
     state.prerollRemaining -= 1;
     if (state.prerollRemaining < 0) state.prerollRemaining = 0;
@@ -250,126 +228,39 @@ function startPrerollThenPlay(item) {
   }, 1000);
 }
 
-/* =========================
-   PLAYER: seçim
-   ========================= */
+/* PLAYER seçim */
 function setActive(item) {
   state.activeId = item.id;
 
-  $("#pTitle").textContent = item.title || "Yayın";
+  const pTitle = $("#pTitle");
+  const pMeta = $("#pMeta");
+  if (pTitle) pTitle.textContent = item.title || "Yayın";
 
   const metaBits = [item.category];
   if (item.league) metaBits.push(item.league);
   if (item.time) metaBits.push(item.time);
-  $("#pMeta").textContent = metaBits.filter(Boolean).join(" • ");
+  if (pMeta) pMeta.textContent = metaBits.filter(Boolean).join(" • ");
 
-  // ✅ Kaynak butonu (varsa)
   const src = buildEmbedUrl(item);
   const btn = $("#btnSource");
   if (btn) {
-    if (!state.debug) {
-      // sıradan kullanıcı görmesin
-      btn.style.display = "none";
-    } else {
-      btn.style.display = "";
-      btn.href = item.sourceUrl || src || "#";
-      btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
-      btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
-    }
+    btn.href = item.sourceUrl || src || "#";
+    btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
+    btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
   }
 
-  // ✅ PREROLL -> sonra video
   startPrerollThenPlay(item);
-
   render();
 }
 
-/* =========================
-   NATIVE ADS
-   ========================= */
-function getNativeAdsForTab(tab) {
-  const ads = (window.HOPGOAL_ADS && Array.isArray(window.HOPGOAL_ADS.native))
-    ? window.HOPGOAL_ADS.native
-    : [];
-
-  return ads
-    .filter(a => (a.tab === tab || a.tab === "both"))
-    .map(a => ({
-      id: safeText(a.id || `native-${Math.random()}`),
-      after: Number(a.after ?? 9999),
-      title: safeText(a.title || "Reklam"),
-      text: safeText(a.text || "Sponsorlu içerik"),
-      image: safeText(a.image || ""),
-      clickUrl: safeText(a.clickUrl || "#"),
-    }))
-    .sort((a, b) => a.after - b.after);
-}
-
-function nativeNode(ad) {
-  const el = document.createElement("div");
-  el.className = "item";
-  el.style.borderColor = "rgba(77,225,255,.28)";
-  el.onclick = () => ad.clickUrl && window.open(ad.clickUrl, "_blank", "noopener,noreferrer");
-
-  const left = document.createElement("div");
-  left.className = "item-left";
-
-  const title = document.createElement("b");
-  title.textContent = ad.title;
-
-  const sub = document.createElement("small");
-  sub.textContent = ad.text;
-
-  left.appendChild(title);
-  left.appendChild(sub);
-
-  const right = document.createElement("div");
-  right.className = "item-right";
-
-  const pill = document.createElement("div");
-  pill.className = "pill live";
-  pill.textContent = "REKLAM";
-  right.appendChild(pill);
-
-  if (ad.image) {
-    const img = document.createElement("img");
-    img.src = ad.image;
-    img.alt = "Native Reklam";
-    img.style.width = "72px";
-    img.style.height = "40px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "10px";
-    img.style.border = "1px solid rgba(255,255,255,.14)";
-    right.appendChild(img);
-  }
-
-  el.appendChild(left);
-  el.appendChild(right);
-  return el;
-}
-
-/* =========================
-   RENDER
-   ========================= */
+/* RENDER */
 function render() {
-  const list = filteredList();
   const root = $("#list");
-  const empty = $("#empty");
   if (!root) return;
 
-  const natives = getNativeAdsForTab(state.tab);
-  const byAfter = new Map();
-  for (const ad of natives) {
-    const key = Number.isFinite(ad.after) ? ad.after : 9999;
-    if (!byAfter.has(key)) byAfter.set(key, []);
-    byAfter.get(key).push(ad);
-  }
-
+  const list = filteredList();
   root.innerHTML = "";
 
-  if (byAfter.has(0)) for (const ad of byAfter.get(0)) root.appendChild(nativeNode(ad));
-
-  let count = 0;
   for (const item of list) {
     const el = document.createElement("div");
     el.className = "item" + (item.id === state.activeId ? " active" : "");
@@ -406,146 +297,98 @@ function render() {
     el.appendChild(left);
     el.appendChild(right);
     root.appendChild(el);
-
-    count++;
-    if (byAfter.has(count)) for (const ad of byAfter.get(count)) root.appendChild(nativeNode(ad));
   }
 
-  for (const [after, ads] of byAfter.entries()) {
-    if (after > count) for (const ad of ads) root.appendChild(nativeNode(ad));
+  if (list.length === 0) {
+    setEmpty("Sonuç yok", "Sheets'te yayın ekleyip enabled=1 yap.");
+  } else {
+    const empty = $("#empty");
+    if (empty) empty.classList.add("hidden");
   }
 
-  if (empty) empty.classList.toggle("hidden", root.children.length !== 0);
+  hideEmptyIfListHasItems();
 }
 
-/* =========================
-   TAB
-   ========================= */
+/* TAB */
 function setTab(tab) {
   state.tab = tab;
-  $("#tabMatches").classList.toggle("active", tab === "match");
-  $("#tabChannels").classList.toggle("active", tab === "channel");
+  $("#tabMatches")?.classList.toggle("active", tab === "match");
+  $("#tabChannels")?.classList.toggle("active", tab === "channel");
   render();
 }
 
-/* =========================
-   LOAD (REMOTE SHEET + FALLBACK LOCAL)
-   ========================= */
+/* LOAD */
 async function load() {
-  // 1) Önce local streams.json ile hızlı aç (site boş kalmasın)
-  // 2) Sonra /api/streams gelirse override et (sheet’ten güncel liste)
-  async function loadLocal() {
-    const res = await fetch("/streams.json", { cache: "no-store" });
-    const data = await res.json();
-    state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize).filter(x => x.enabled);
-  }
+  setEmpty("Yükleniyor…", "Kanallar getiriliyor…");
 
-  async function loadRemote() {
-    const r = await fetch("/api/streams", { cache: "no-store" });
+  // önce remote dene (sheet)
+  try {
+    const r = await fetch(`/api/streams?ts=${Date.now()}`, { cache: "no-store" });
     const j = await r.json();
-    // Beklenen format: { ok:true, streams:[...] }
-    // Bazı durumlarda anahtar farklı gelebilir: data/items
+
     const streams = Array.isArray(j?.streams)
       ? j.streams
-      : (Array.isArray(j?.data) ? j.data : (Array.isArray(j?.items) ? j.items : null));
+      : (Array.isArray(j?.data) ? j.data : (Array.isArray(j?.items) ? j.items : []));
 
-    if (j && j.ok && streams) {
-      state.all = streams.map(normalize).filter(x => x.enabled);
-      return true;
-    }
-    return false;
-  }
-
-  // İlk görüntü için local
-  await loadLocal();
-  setTab("match");
-  const first = filteredList()[0] || null;
-  if (first) setActive(first);
-  render();
-
-  // Arkadan remote dene (sheet)
-  try {
-    const ok = await loadRemote();
-    if (ok) {
-      // remote geldiyse UI’yı yenile
-      setTab(state.tab || "match");
-      render();
-      // aktif item yoksa ilkini seç
-      if (!state.activeId) {
-        const f2 = filteredList()[0] || null;
-        if (f2) setActive(f2);
-      }
+    if (j && (j.ok === true || j.ok === "true") && Array.isArray(streams)) {
+      state.all = streams.map(normalize);
+    } else {
+      throw new Error("API format hatalı");
     }
   } catch (e) {
-    // remote yoksa sorun değil, local ile devam
-    console.warn("remote streams failed:", e);
+    console.warn("streams load failed:", e);
+    // fallback local (boş olabilir)
+    try {
+      const res = await fetch(`/streams.json?ts=${Date.now()}`, { cache: "no-store" });
+      const data = await res.json();
+      state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
+    } catch {
+      state.all = [];
+    }
   }
+
+  // default tab
+  setTab("match");
+
+  // ilk item varsa seç
+  const first = filteredList()[0] || null;
+  if (first) setActive(first);
+
+  render();
 }
 
-
-/* =========================
-   WIRE
-   ========================= */
-
-function setupPlayerChromeAutoHide() {
-  const card = document.querySelector(".player-card");
-  if (!card) return;
-
-  const prerollEl = document.getElementById("preRoll");
-
-  function hide() {
-    // preroll açıksa saklama
-    if (prerollEl && !prerollEl.classList.contains("hidden")) return reset();
-    card.classList.add("chrome-hidden");
-  }
-
-  function reset() {
-    card.classList.remove("chrome-hidden");
-    if (state.uiHideTimer) clearTimeout(state.uiHideTimer);
-    state.uiHideTimer = setTimeout(hide, 2500);
-  }
-
-  // iframe üstünde mouse event kaçabilir; container dinlemek yeterli
-  ["mousemove", "touchstart", "keydown"].forEach((ev) => {
-    card.addEventListener(ev, reset, { passive: true });
-  });
-
-  reset();
-}
-
+/* WIRE (hata almayacak şekilde) */
 function wire() {
-  $("#tabMatches").addEventListener("click", () => setTab("match"));
-  $("#tabChannels").addEventListener("click", () => setTab("channel"));
+  $("#tabMatches")?.addEventListener("click", () => setTab("match"));
+  $("#tabChannels")?.addEventListener("click", () => setTab("channel"));
 
-  $("#q").addEventListener("input", render);
+  $("#q")?.addEventListener("input", render);
 
-  const srcBtn = $("#btnSource");
-  if (srcBtn && !state.debug) srcBtn.style.display = "none";
-
-  $("#onlyLive").addEventListener("change", (e) => {
+  $("#onlyLive")?.addEventListener("change", (e) => {
     state.onlyLive = !!e.target.checked;
     render();
   });
 
-  setupPlayerChromeAutoHide();
-
-  $("#btnRefresh").addEventListener("click", () => {
+  $("#btnRefresh")?.addEventListener("click", () => {
     const current = state.all.find(x => x.id === state.activeId);
     if (!current) return;
     const src = buildEmbedUrl(current);
-    $("#player").src = "about:blank";
-    setTimeout(() => { $("#player").src = src || "about:blank"; }, 80);
+    const pl = $("#player");
+    if (!pl) return;
+    pl.src = "about:blank";
+    setTimeout(() => { pl.src = src || "about:blank"; }, 80);
   });
 
-  $("#btnClear").addEventListener("click", () => {
+  $("#btnClear")?.addEventListener("click", () => {
     stopPreroll();
     state.activeId = null;
-    $("#player").src = "about:blank";
-    $("#pTitle").textContent = "Bir yayın seç";
-    $("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
+    const pl = $("#player");
+    if (pl) pl.src = "about:blank";
+    $("#pTitle") && ($("#pTitle").textContent = "Bir yayın seç");
+    $("#pMeta") && ($("#pMeta").textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.");
     render();
   });
 }
 
 wire();
-load().catch(() => $("#empty").classList.remove("hidden"));
+load();
