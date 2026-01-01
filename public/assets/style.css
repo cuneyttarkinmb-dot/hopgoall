@@ -1346,5 +1346,11 @@ a{color:inherit}
 }
 
 /* Liste boşken çıkan "Sonuç yok" overlay'i sekmelere tıklamayı engellemesin */
-#empty, .empty { pointer-events: none; }
-.tabs { position: relative; z-index: 5; }
+/* Sekmelere tıklamayı engelleyen overlay/empty bloklarını etkisizleştir */
+#empty, .empty { pointer-events: none !important; }
+
+/* Sekme satırı her şeyin üstünde kalsın */
+.tabs, .tabs * { position: relative; z-index: 9999; }
+
+/* Güvenlik: list ve player üstüne düşen şeyler tıklamayı yemesin */
+.panel, .right-panel { position: relative; z-index: 10; }
