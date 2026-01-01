@@ -25,6 +25,7 @@
   <header class="topbar">
     <a class="brand" href="./index.html" aria-label="HopGoal">
       <img class="brand-logo" src="./assets/hopgoal-logo.svg" alt="HopGoal" />
+      <span class="brand-text"><b>HopGoal</b><small>Live</small></span>
     </a>
   </header>
 
@@ -147,6 +148,29 @@
           <div id="popularList" class="popular-list"></div>
         </section>
 
+        <!-- Puan Durumu -->
+        <section id="standingsCard" class="standings-card">
+          <div class="standings-head">
+            <div>
+              <b class="standings-title">Puan Durumu</b>
+              <div id="standingsMeta" class="standings-meta">Yükleniyor…</div>
+            </div>
+
+            <div class="standings-actions">
+              <select id="leagueSelect" class="standings-select" aria-label="Lig seç"></select>
+              <button id="standingsToggle" class="standings-toggle" type="button" aria-label="Genişlet">
+                <span class="arrow">⌄</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="standings-table-wrap">
+            <table class="standings-table">
+              <tbody id="standingsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
         <div class="tabs">
           <button class="tab active" id="tabMatches" type="button">Maçlar</button>
           <button class="tab" id="tabChannels" type="button">Kanallar</button>
@@ -166,7 +190,7 @@
 
         <div id="empty" class="empty hidden">
           <b>Sonuç yok</b>
-          <div>streams.json içine yayın ekle.</div>
+          <div>Sheets’te yayın ekleyip enabled=1 yap.</div>
         </div>
       </aside>
     </div>

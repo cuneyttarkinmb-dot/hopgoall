@@ -7,12 +7,22 @@ const state = {
   tab: "match",
   onlyLive: true,
   activeId: null,
+  debug: (new URLSearchParams(location.search).get("debug") === "1"),
+  uiHideTimer: null,
 
   // PREROLL state
   prerollTimer: null,
   prerollRemaining: 0,
   prerollItem: null,
 };
+
+function isRowEnabled(v) {
+  if (v === undefined || v === null) return true;
+  const s = String(v).trim().toLowerCase();
+  if (s === "") return true;
+  if (s === "0" || s === "false" || s === "no") return false;
+  return true;
+}
 
 function safeText(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set(arr)].filter(Boolean); }
@@ -57,19 +67,45 @@ function youtubeToEmbedUrl(raw) {
   }
 }
 
+function b64UrlEncode(str) {
+  try {
+    // UTF-8 safe base64url
+    const b64 = btoa(unescape(encodeURIComponent(str)));
+    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  } catch (e) {
+    return "";
+  }
+}
+
+function shouldProxyEmbed(url) {
+  const u = String(url || "");
+  // trycloudflare gibi geçici domainleri DOM'da göstermemek için
+  return /trycloudflare\.com/i.test(u) || /\/myplayer\.html/i.test(u) || /\.html(\?|#|$)/i.test(u);
+}
+
+function wrapPlayerProxy(embedUrl) {
+  const token = b64UrlEncode(embedUrl);
+  if (!token) return embedUrl || "";
+  return `/api/player?u=${encodeURIComponent(token)}`;
+}
+
 function buildEmbedUrl(item) {
   if (item.provider === "youtube") {
     const raw = item.youtubeEmbedUrl || item.youtubeUrl || item.embedUrl || item.url || "";
     return youtubeToEmbedUrl(raw);
   }
   if (item.provider === "twitch") return item.twitchChannel ? twitchEmbedUrl(item.twitchChannel) : "";
-  return item.embedUrl || "";
+  const raw = item.embedUrl || "";
+  return shouldProxyEmbed(raw) ? wrapPlayerProxy(raw) : raw;
 }
+
 
 function normalize(item) {
   const kind = safeText(item.kind || item.type || "channel");
+  const enabled = isRowEnabled(item.enabled);
   return {
     ...item,
+    enabled,
     kind: (kind === "match" ? "match" : "channel"),
     title: safeText(item.title),
     category: safeText(item.category || "Other"),
@@ -78,6 +114,7 @@ function normalize(item) {
     isLive: !!item.isLive,
     sourceUrl: safeText(item.sourceUrl || ""),
   };
+}
 }
 
 /* =========================
@@ -230,9 +267,15 @@ function setActive(item) {
   const src = buildEmbedUrl(item);
   const btn = $("#btnSource");
   if (btn) {
-    btn.href = item.sourceUrl || src || "#";
-    btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
-    btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
+    if (!state.debug) {
+      // sıradan kullanıcı görmesin
+      btn.style.display = "none";
+    } else {
+      btn.style.display = "";
+      btn.href = item.sourceUrl || src || "#";
+      btn.style.opacity = (item.sourceUrl || src) ? "1" : ".5";
+      btn.style.pointerEvents = (item.sourceUrl || src) ? "auto" : "none";
+    }
   }
 
   // ✅ PREROLL -> sonra video
@@ -394,7 +437,7 @@ async function load() {
   async function loadLocal() {
     const res = await fetch("/streams.json", { cache: "no-store" });
     const data = await res.json();
-    state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize);
+    state.all = (Array.isArray(data.streams) ? data.streams : []).map(normalize).filter(x => x.enabled);
   }
 
   async function loadRemote() {
@@ -407,7 +450,7 @@ async function load() {
       : (Array.isArray(j?.data) ? j.data : (Array.isArray(j?.items) ? j.items : null));
 
     if (j && j.ok && streams) {
-      state.all = streams.map(normalize);
+      state.all = streams.map(normalize).filter(x => x.enabled);
       return true;
     }
     return false;
@@ -443,16 +486,48 @@ async function load() {
 /* =========================
    WIRE
    ========================= */
+
+function setupPlayerChromeAutoHide() {
+  const card = document.querySelector(".player-card");
+  if (!card) return;
+
+  const prerollEl = document.getElementById("preRoll");
+
+  function hide() {
+    // preroll açıksa saklama
+    if (prerollEl && !prerollEl.classList.contains("hidden")) return reset();
+    card.classList.add("chrome-hidden");
+  }
+
+  function reset() {
+    card.classList.remove("chrome-hidden");
+    if (state.uiHideTimer) clearTimeout(state.uiHideTimer);
+    state.uiHideTimer = setTimeout(hide, 2500);
+  }
+
+  // iframe üstünde mouse event kaçabilir; container dinlemek yeterli
+  ["mousemove", "touchstart", "keydown"].forEach((ev) => {
+    card.addEventListener(ev, reset, { passive: true });
+  });
+
+  reset();
+}
+
 function wire() {
   $("#tabMatches").addEventListener("click", () => setTab("match"));
   $("#tabChannels").addEventListener("click", () => setTab("channel"));
 
   $("#q").addEventListener("input", render);
 
+  const srcBtn = $("#btnSource");
+  if (srcBtn && !state.debug) srcBtn.style.display = "none";
+
   $("#onlyLive").addEventListener("change", (e) => {
     state.onlyLive = !!e.target.checked;
     render();
   });
+
+  setupPlayerChromeAutoHide();
 
   $("#btnRefresh").addEventListener("click", () => {
     const current = state.all.find(x => x.id === state.activeId);

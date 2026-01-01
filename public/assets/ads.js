@@ -1,8 +1,8 @@
 /* =========================================================
    HopGoal Ads (FAST RENDER + REMOTE SHEETS)
-   - İlk anda LOCAL reklamlari basar (boşluk kalmaz)
-   - Remote (/api/ads) gelince sadece img src/href günceller (flicker azalır)
-   - Basit preload ile görsel daha hızlı gelir
+   - LOCAL fallback ile boşluk bırakmaz
+   - Remote (/api/ads) gelince günceller
+   - enabled=0 olan slotları GÖSTERMEZ (preroll dahil)
    ========================================================= */
 
 (function () {
@@ -19,21 +19,47 @@
     return (Date.now() - n) / 60000;
   }
 
+  // enabled yorumlama:
+  // - 0 / "0" / false => kapalı
+  // - boş / undefined => açık (geriye dönük uyum)
+  function isEnabled(v) {
+    if (v === undefined || v === null) return true;
+    const s = String(v).trim().toLowerCase();
+    if (s === "") return true;
+    if (s === "0" || s === "false" || s === "no") return false;
+    return true;
+  }
+
+  function asNum(v, fallback) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function hasCreative(slotName) {
+    const s = ADS[slotName];
+    const list = (s && Array.isArray(s.creatives)) ? s.creatives : [];
+    return list.some(c => (c && (c.image || "").trim()));
+  }
+
   // =========================
   // LOCAL fallback config
   // =========================
   const ADS = window.HOPGOAL_ADS || {
-    top_banner: { label: "Banner", creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Top Banner" }] },
-    player_banner: { label: "Player Banner", creatives: [{ image: "/ads/banner-970x90-2.gif", clickUrl: "#", alt: "Player Banner" }] },
-    sidebar_rectangle: { label: "Sidebar", creatives: [{ image: "/ads/sidebar-300x250.gif", clickUrl: "#", alt: "Sidebar" }] },
-    floating: { label: "Bottom Banner", showAfterMs: 1200, creatives: [{ image: "/ads/banner-970x90.gif", clickUrl: "#", alt: "Bottom" }] },
-    interstitial: { label: "Interstitial", showAfterMs: 1200, frequencyMinutes: 60, creatives: [{ image: "/ads/interstitial-900x500.gif", clickUrl: "#", alt: "Interstitial" }] },
-    bg_left: { label: "BG Left", creatives: [{ image: "/ads/bg-left-600x1400.jpg", clickUrl: "#", alt: "BG Left" }] },
-    bg_right: { label: "BG Right", creatives: [{ image: "/ads/bg-right-600x1400.jpg", clickUrl: "#", alt: "BG Right" }] },
-    native: [],
-    preroll: { enabled: true, durationSeconds: 15, skippableLastSeconds: 5, creatives: [{ image: "/ads/preroll-800x450.gif", clickUrl: "#", alt: "PreRoll" }] },
-    popup: { enabled: false },
+    // Varsayılan: BOŞ (mavi placeholder yok)
+    // Slot ancak Sheets'ten enabled=1 + image gelirse görünür
+    top_banner: { label: "Banner", enabled: 0, creatives: [] },
+    player_banner: { label: "Player Banner", enabled: 0, creatives: [] },
+    sidebar_rectangle: { label: "Sidebar", enabled: 0, creatives: [] },
+    bg_left: { label: "BG Left", enabled: 0, creatives: [] },
+    bg_right: { label: "BG Right", enabled: 0, creatives: [] },
+    floating: { label: "Bottom Banner", enabled: 0, showAfterMs: 1200, creatives: [] },
+    interstitial: { label: "Interstitial", enabled: 0, frequencyMinutes: 60, creatives: [] },
+    preroll: { label: "Reklam", enabled: 0, durationSeconds: 15, skippableLastSeconds: 5, creatives: [] },
   };
+
+  // Global erişim (app.js preroll vb. için)
+  window.HOPGOAL_ADS = ADS;
+
 
   window.HOPGOAL_ADS = ADS;
 
@@ -54,7 +80,6 @@
     img.src = url;
   }
 
-  // Slot elementlerini "swap" etmek için işaretliyoruz
   function ensureSlotShell(el, slotName) {
     if (el.dataset.adReady === "1") return;
 
@@ -68,21 +93,31 @@
     el.dataset.adSlotName = slotName;
   }
 
+  function clearSlot(el) {
+    el.innerHTML = "";
+    el.dataset.adReady = "0";
+  }
+
   function updateSlot(el, slotName) {
     const s = ADS[slotName];
     if (!s) return;
 
+    // enabled=0 ise slotu temizle
+    if (!isEnabled(s.enabled)) {
+      clearSlot(el);
+      return;
+    }
+
     const c = pick(slotName) || {};
     const imgUrl = (c.image || "").trim();
 
-    // image yoksa temizle
     if (!imgUrl) {
-      el.innerHTML = "";
+      clearSlot(el);
+     
       return;
     }
 
     preloadImage(imgUrl);
-
     ensureSlotShell(el, slotName);
 
     const labelEl = el.querySelector(".ad-label");
@@ -97,13 +132,40 @@
     }
   }
 
-  // =========================
+  
+  function rowsToSlots(rows) {
+    const out = {};
+    (rows || []).forEach((r) => {
+      const slot = String(r.slot || r.name || "").trim();
+      if (!slot) return;
+      if (!out[slot]) out[slot] = { label: r.label || "Reklam", enabled: r.enabled ?? 0, creatives: [] };
+      // label/enabled/timing
+      if (r.label != null && String(r.label).trim() !== "") out[slot].label = String(r.label).trim();
+      if (r.enabled != null) out[slot].enabled = r.enabled;
+      if (r.durationSeconds != null) out[slot].durationSeconds = r.durationSeconds;
+      if (r.skippableLastSeconds != null) out[slot].skippableLastSeconds = r.skippableLastSeconds;
+
+      const img = String(r.image || r.img || "").trim();
+      if (img) {
+        out[slot].creatives.push({
+          image: img,
+          clickUrl: (r.clickUrl || r.url || "#"),
+          alt: (r.alt || "Reklam"),
+        });
+      }
+    });
+    return out;
+  }
+
+// =========================
   // Interstitial
   // =========================
   function setupInterstitial() {
     const slot = ADS.interstitial;
     const wrap = document.getElementById("adInterstitial");
     if (!slot || !wrap) return;
+    if (!isEnabled(slot.enabled)) return;
+    if (!hasCreative("floating")) return;
 
     const last = localStorage.getItem(LS.interstitial);
     if (minutesSince(last) < (slot.frequencyMinutes || 60)) return;
@@ -134,6 +196,8 @@
     const slot = ADS.floating;
     const wrap = document.getElementById("adFloating");
     if (!slot || !wrap) return;
+    if (!isEnabled(slot.enabled)) return;
+    if (!hasCreative("floating")) return;
 
     if (sessionStorage.getItem(LS.floatingClosed) === "1") return;
 
@@ -163,7 +227,7 @@
     document.querySelectorAll("[data-ad-slot]").forEach((el) => {
       const slot = el.getAttribute("data-ad-slot");
       if (!slot) return;
-      if (slot === "floating") return; // özel kuruyoruz
+      if (slot === "floating") return;
       updateSlot(el, slot);
     });
 
@@ -183,15 +247,25 @@
       const remote = remoteSlots[slotName];
       if (!remote) return;
 
-      const creatives = Array.isArray(remote.creatives) ? remote.creatives : null;
-      const label = typeof remote.label === "string" ? remote.label : null;
+      if (!ADS[slotName]) ADS[slotName] = { label: "Reklam", enabled: true, creatives: [] };
 
-      if (!ADS[slotName]) ADS[slotName] = { label: label || "Reklam", creatives: creatives || [] };
-      if (label) ADS[slotName].label = label;
-      if (creatives) ADS[slotName].creatives = creatives;
+      // label
+      if (typeof remote.label === "string") ADS[slotName].label = remote.label;
 
-      // remote creatives varsa preload
-      if (creatives) creatives.forEach(c => preloadImage((c.image || "").trim()));
+      // enabled (0/1)
+      if ("enabled" in remote) ADS[slotName].enabled = remote.enabled;
+
+      // creatives
+      if (Array.isArray(remote.creatives)) {
+        ADS[slotName].creatives = remote.creatives;
+        remote.creatives.forEach((c) => preloadImage((c.image || "").trim()));
+      }
+
+      // preroll / timing / frequency / showAfter gibi alanlar (varsa)
+      if ("durationSeconds" in remote) ADS[slotName].durationSeconds = asNum(remote.durationSeconds, ADS[slotName].durationSeconds);
+      if ("skippableLastSeconds" in remote) ADS[slotName].skippableLastSeconds = asNum(remote.skippableLastSeconds, ADS[slotName].skippableLastSeconds);
+      if ("showAfterMs" in remote) ADS[slotName].showAfterMs = asNum(remote.showAfterMs, ADS[slotName].showAfterMs);
+      if ("frequencyMinutes" in remote) ADS[slotName].frequencyMinutes = asNum(remote.frequencyMinutes, ADS[slotName].frequencyMinutes);
     });
   }
 
@@ -199,11 +273,14 @@
     try {
       const r = await fetch("/api/ads", { cache: "no-store" });
       const j = await r.json();
-      if (!j || !j.ok || !j.slots) return;
-
-      mergeRemoteSlots(j.slots);
-
-      // Remote geldikten sonra sadece güncelle
+      if (!j) return;
+      const slots = (j.ok && j.slots) ? j.slots
+        : (Array.isArray(j?.data) ? rowsToSlots(j.data)
+        : (Array.isArray(j?.items) ? rowsToSlots(j.items)
+        : (Array.isArray(j?.rows) ? rowsToSlots(j.rows)
+        : null)));
+      if (!slots) return;
+      mergeRemoteSlots(slots);
       applyAds();
     } catch (e) {
       console.warn("[ads.js] remote ads failed:", e);
@@ -211,9 +288,7 @@
   }
 
   function init() {
-    // İlk anda LOCAL bas
     applyAds();
-    // Remote gelince sadece swap
     loadRemoteAds();
   }
 

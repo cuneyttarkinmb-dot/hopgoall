@@ -1,73 +1,7 @@
 {
-  "site": { "name": "HopGoal Live", "defaultOnlyLive": true },
-  "streams": [
-    {
-  "id": "ch-myplayer-1",
-  "kind": "channel",
-  "title": "MyPlayer Yayını",
-  "category": "Canlı",
-  "provider": "embed",
-  "embedUrl": "https://earning-situated-crops-tiny.trycloudflare.com/myplayer.html",
-  "sourceUrl": "https://earning-situated-crops-tiny.trycloudflare.com/myplayer.html",
-  "isLive": true,
-  "tags": ["myplayer", "srs"]
-},
-        {
-      "id": "ch-yt-1",
-      "kind": "channel",
-      "title": "Maç 2",
-      "category": "News",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/watch?v=O204GKn-Klk&list=RDO204GKn-Klk&start_radio=1",
-      "sourceUrl": "https://www.youtube.com/",
-      "isLive": true,
-      "tags": ["youtube"]
-    },
-        {
-      "id": "ch-yt-1",
-      "kind": "channel",
-      "title": "Maç 3",
-      "category": "News",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/watch?v=ujCS4p3h0E0&list=RDujCS4p3h0E0&start_radio=1",
-      "sourceUrl": "https://www.youtube.com/",
-      "isLive": true,
-      "tags": ["youtube"]
-    },
-        {
-      "id": "ch-yt-1",
-      "kind": "channel",
-      "title": "Maç 4",
-      "category": "News",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/embed/live_stream?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw",
-      "sourceUrl": "https://www.youtube.com/",
-      "isLive": true,
-      "tags": ["youtube"]
-    },
-    {
-      "id": "ch-tw-1",
-      "kind": "channel",
-      "title": "Twitch Demo Channel",
-      "category": "Gaming",
-      "provider": "twitch",
-      "twitchChannel": "monstercat",
-      "sourceUrl": "https://www.twitch.tv/monstercat",
-      "isLive": true,
-      "tags": ["twitch"]
-    },
-    {
-      "id": "match-1",
-      "kind": "match",
-      "title": "Vanspor - Hatayspor",
-      "time": "16:00",
-      "league": "Trendyol 1. Lig",
-      "category": "Football",
-      "provider": "youtube",
-      "youtubeEmbedUrl": "https://www.youtube.com/embed/VIDEO_ID",
-      "sourceUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
-      "isLive": true,
-      "tags": ["maç", "futbol"]
-    }
-  ]
+  "site": {
+    "name": "HopGoal Live",
+    "defaultOnlyLive": true
+  },
+  "streams": []
 }

@@ -262,6 +262,13 @@ a{color:inherit}
 .player-title{font-weight:800;font-size:16px}
 .player-meta{color:var(--muted);font-size:13px;margin-top:4px}
 .player-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.player-head{transition: opacity .22s ease, transform .22s ease;}
+.player-card.chrome-hidden .player-head{
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
 
 .player-frame{
   aspect-ratio: 16/9;
@@ -311,6 +318,43 @@ a{color:inherit}
   display:flex;gap:8px;align-items:center;
   color:var(--muted);font-size:13px;
   user-select:none;
+}
+
+/* Daha şık "Sadece canlı" switch */
+.toggle input{
+  -webkit-appearance:none;
+  appearance:none;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.08);
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  transition: background .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.toggle input::after{
+  content:"";
+  position:absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.88);
+  transition: transform .18s ease, background .18s ease;
+}
+.toggle input:checked{
+  background: linear-gradient(90deg, rgba(77,225,255,.42), rgba(168,85,247,.38));
+  box-shadow: 0 0 18px rgba(77,225,255,.22);
+}
+.toggle input:checked::after{
+  transform: translateX(16px);
+}
+.toggle span{
+  color: rgba(234,242,255,.82);
+  font-weight: 650;
 }
 
 .list{
