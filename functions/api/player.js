@@ -1,4 +1,5 @@
 // functions/api/player.js
+<<<<<<< HEAD
 // =========================================================
 // /api/player
 // Amaç: iframe src içinde gerçek upstream linki göstermemek
@@ -48,10 +49,18 @@ export async function onRequestGet({ request, env }) {
     if (decoded) upstream = decoded;
   }
 
+=======
+// Amaç: myplayer.html'i kendi domaininden serve etmek.
+// Böylece inspect'te trycloudflare linkin görünmez.
+
+export async function onRequestGet({ request, env }) {
+  const upstream = env.PLAYER_UPSTREAM_URL; // ör: https://xxxxx.trycloudflare.com/myplayer.html
+>>>>>>> ea5a1487894330985b071eeed7cccb7225f17105
   if (!upstream) {
     return new Response("PLAYER_UPSTREAM_URL env yok", { status: 500 });
   }
 
+<<<<<<< HEAD
   let upstreamUrl;
   try {
     upstreamUrl = new URL(upstream);
@@ -72,6 +81,16 @@ export async function onRequestGet({ request, env }) {
   }
 
   const r = await fetch(upstreamUrl.toString(), {
+=======
+  // Basit "direct open" engeli (kolay aşılabilir ama işe yarar)
+  const ref = request.headers.get("referer") || "";
+  const allowed = (env.ALLOWED_REF || "").trim(); // ör: hopgoal.pages.dev
+  if (allowed && !ref.includes(allowed)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  const r = await fetch(upstream, {
+>>>>>>> ea5a1487894330985b071eeed7cccb7225f17105
     headers: { "user-agent": request.headers.get("user-agent") || "" },
   });
 
