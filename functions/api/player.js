@@ -3,7 +3,7 @@
 // iframe src içinde gerçek upstream linki göstermemek için proxy.
 // Env:
 // - PLAYER_UPSTREAM_URL (zorunlu)
-// - ALLOWED_REF (opsiyonel)  ör: hopgoal.pages.dev
+// - ALLOWED_REF (opsiyonel)  ör: hopgoall.pages.dev
 // - PLAYER_ALLOWED_HOSTS (opsiyonel) ör: trycloudflare.com,example.com
 
 function b64UrlToStr(b64url) {
@@ -33,7 +33,7 @@ export async function onRequestGet({ request, env }) {
 
   // Referer kontrolü (tam koruma değil, kolay erişimi azaltır)
   const ref = request.headers.get("referer") || "";
-  const allowedRef = (env.ALLOWED_REF || "").trim(); // ör: hopgoal.pages.dev
+  const allowedRef = (env.ALLOWED_REF || "").trim(); // ör: hopgoall.pages.dev
   if (allowedRef && !ref.includes(allowedRef)) {
     return new Response("Forbidden", { status: 403 });
   }
