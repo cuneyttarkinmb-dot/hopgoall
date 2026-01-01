@@ -4,15 +4,14 @@ export async function onRequest(context) {
 
   const on = String(env.MAINTENANCE || "0") === "1";
 
-  // Bakım sayfası + statik assetler hariç her şeyi kapat
+  // Sadece bakım sayfası ve assetler açık
   const allow =
     url.pathname === "/maintenance.html" ||
     url.pathname.startsWith("/assets/");
 
   if (on && !allow) {
-    return fetch(new URL("/maintenance.html", url.origin).toString(), {
-      headers: { "cache-control": "no-store" },
-    });
+    // Direkt file serve
+    return context.env.ASSETS.fetch(new Request(new URL("/maintenance.html", url.origin)));
   }
 
   return next();
