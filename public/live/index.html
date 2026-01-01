@@ -4,43 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HopGoal Live</title>
-
-  <!-- Senin projende CSS burada -->
   <link rel="stylesheet" href="/assets/style.css" />
 </head>
 
 <body>
-
-  <!-- =========================================================
-       [BG ADS] (Sağ/Sol arka plan reklamları)
-       ========================================================= -->
+  <!-- BG ADS -->
   <div class="bg-ads" aria-hidden="true">
     <div class="bg-ad bg-left" data-ad-slot="bg_left"></div>
     <div class="bg-ad bg-right" data-ad-slot="bg_right"></div>
   </div>
 
-  <!-- =========================================================
-       [HEADER]
-       ========================================================= -->
+  <!-- HEADER -->
   <header class="topbar">
-    <a class="brand" href="./index.html" aria-label="HopGoal">
-      <img class="brand-logo" src="./assets/hopgoal-logo.svg" alt="HopGoal" />
+    <a class="brand" href="/live" aria-label="HopGoal">
+      <img class="brand-logo" src="/assets/hopgoal-logo.svg" alt="HopGoal" />
       <span class="brand-text"><b>HopGoal</b><small>Live</small></span>
     </a>
   </header>
 
   <main class="container">
-
-    <!-- =========================================================
-         [TOP BANNER]
-         ========================================================= -->
+    <!-- TOP BANNER -->
     <div class="ad-slot ad-top-banner" data-ad-slot="top_banner"></div>
 
     <div class="layout">
-
-      <!-- =====================================================
-           [LEFT] PLAYER KARTI
-           ===================================================== -->
+      <!-- LEFT PLAYER -->
       <section class="player-card">
         <div class="player-head">
           <div>
@@ -49,46 +36,29 @@
           </div>
 
           <div class="player-actions">
-            <!-- [PLAYER] Seçili yayını yeniler -->
             <button id="btnRefresh" class="btn" type="button">Yayın açılmıyorsa yenile</button>
-
-            <!-- ✅ [SOURCE] app.js buranın href'ini otomatik günceller -->
             <a id="btnSource" class="btn" href="#" target="_blank" rel="noopener noreferrer">Kaynağı aç</a>
-
-            <!-- [PLAYER] Player'ı temizler/kapatır -->
             <button id="btnClear" class="iconbtn" type="button" title="Kapat">✕</button>
           </div>
         </div>
 
         <div class="player-frame">
-          <!-- =========================================================
-               [PREROLL ADS] Yayın seçince reklam overlay
-               ========================================================= -->
+          <!-- PREROLL -->
           <div id="preRoll" class="preroll hidden">
             <div class="preroll-card">
               <div class="preroll-top">
                 <div class="ad-label">Reklam</div>
-
                 <div class="preroll-right">
-                  <div class="preroll-timer">
-                    <span id="preRollCountdown">15</span>s
-                  </div>
-                  <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>
-                    10 sn sonra geç
-                  </button>
+                  <div class="preroll-timer"><span id="preRollCountdown">15</span>s</div>
+                  <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>10 sn sonra geç</button>
                 </div>
               </div>
-
-              <!-- [PREROLL CLICK] Reklama tıklayınca dış link -->
               <a id="preRollClick" class="preroll-body" href="#" target="_blank" rel="sponsored noopener noreferrer">
                 <img id="preRollImg" alt="Reklam" />
               </a>
             </div>
           </div>
 
-          <!-- =========================================================
-               [IFRAME PLAYER]
-               ========================================================= -->
           <iframe
             id="player"
             title="Live player"
@@ -97,19 +67,11 @@
             src="about:blank"></iframe>
         </div>
 
-        <!-- =========================================================
-             [PLAYER_BANNER]
-             ========================================================= -->
         <div class="ad-slot ad-player-banner" data-ad-slot="player_banner"></div>
-
-        <!-- Puan Durumu sağ panelde (tek) -->
       </section>
 
-      <!-- =====================================================
-           [RIGHT] SIDE PANEL
-           ===================================================== -->
+      <!-- RIGHT PANEL -->
       <aside class="side-card">
-
         <section class="popular-card">
           <div class="popular-head">
             <b>Popüler Maçlar</b>
@@ -118,7 +80,6 @@
           <div id="popularList" class="popular-list"></div>
         </section>
 
-        <!-- Puan Durumu -->
         <section id="standingsCard" class="standings-card">
           <div class="standings-head">
             <div>
@@ -147,44 +108,4 @@
         </div>
 
         <div class="side-tools">
-          <input id="q" class="input" placeholder="Maç veya kanal ara..." autocomplete="off" />
-          <label class="toggle">
-            <input id="onlyLive" type="checkbox" checked />
-            <span>Sadece canlı</span>
-          </label>
-        </div>
-
-        <div class="ad-slot ad-rect" data-ad-slot="sidebar_rectangle"></div>
-
-        <div id="list" class="list"></div>
-
-        <div id="empty" class="empty hidden">
-          <b>Sonuç yok</b>
-          <div>Sheets’te yayın ekleyip enabled=1 yap.</div>
-        </div>
-      </aside>
-    </div>
-  </main>
-
-  <!-- FLOATING -->
-  <div id="adFloating" class="ad-floating hidden" data-ad-slot="floating"></div>
-
-  <!-- INTERSTITIAL -->
-  <div id="adInterstitial" class="ad-interstitial hidden">
-    <div id="adInterstitialBackdrop" class="ad-interstitial-backdrop"></div>
-    <div class="ad-interstitial-card">
-      <button id="adInterstitialClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
-      <div class="ad-label">Interstitial</div>
-      <a href="#" target="_blank" rel="sponsored noopener noreferrer">
-        <img src="" alt="Interstitial Reklam">
-      </a>
-    </div>
-  </div>
-
-  <!-- ✅ Script sırası önemli -->
-<script src="/assets/ads.js"></script>
-<script src="/assets/popular.js"></script>
-<script src="/assets/standings.js"></script>
-<script src="/assets/app.js"></script>
-</body>
-</html>
+          <input id="q"
