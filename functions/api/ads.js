@@ -2,7 +2,7 @@
 // Google Apps Script JSON'u proxyler (CORS derdi yok).
 // Env: ADS_SHEET_URL
 
-const TTL_MS = 60 * 1000;
+const TTL_MS = 5 * 1000;
 let cache = { ts: 0, payload: null };
 
 export async function onRequestGet({ env }) {
