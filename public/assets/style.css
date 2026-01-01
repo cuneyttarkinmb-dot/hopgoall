@@ -1354,3 +1354,14 @@ a{color:inherit}
 
 /* Güvenlik: list ve player üstüne düşen şeyler tıklamayı yemesin */
 .panel, .right-panel { position: relative; z-index: 10; }
+/* FIX: empty kutusu tıklamayı asla engellemesin */
+#empty {
+  pointer-events: none !important;
+}
+
+/* üst UI katmanı her zaman tıklanabilir olsun */
+.tabs, .side-tools, #list {
+  position: relative;
+  z-index: 2;
+}
+
