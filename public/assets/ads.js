@@ -203,8 +203,21 @@
 
       mergeRemoteSlots(j.slots);
 
+      // ✅ PREROLL'u da Sheets'ten al (varsa)
+      if (j.preroll && typeof j.preroll === "object") {
+        ADS.preroll = j.preroll;
+
+        // preroll creative'lerini de preload et
+        if (Array.isArray(ADS.preroll.creatives)) {
+          ADS.preroll.creatives.forEach(c => preloadImage((c.image || "").trim()));
+        }
+      }
+
       // Remote geldikten sonra sadece güncelle
       applyAds();
+
+
+       
     } catch (e) {
       console.warn("[ads.js] remote ads failed:", e);
     }
