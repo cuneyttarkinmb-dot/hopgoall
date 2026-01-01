@@ -7,13 +7,17 @@ const state = {
   tab: "match",
   onlyLive: true,
   activeId: null,
-  debug: (new URLSearchParams(location.search).get("debug") === "1"),
+  debug: new URLSearchParams(location.search).get("debug") === "1",
   uiHideTimer: null,
 
   prerollTimer: null,
   prerollRemaining: 0,
   prerollItem: null,
 };
+
+/* =========================
+   HLS (m3u8) SUPPORT
+========================= */
 function isHlsUrl(u) {
   return /\.m3u8($|\?)/i.test(String(u || ""));
 }
@@ -22,20 +26,20 @@ function stopAllPlayers() {
   const iframe = document.getElementById("player");
   const video = document.getElementById("hlsPlayer");
 
+  // HLS instance temizle
+  if (window.__hlsInstance) {
+    try { window.__hlsInstance.destroy(); } catch {}
+    window.__hlsInstance = null;
+  }
+
   // iframe durdur
   if (iframe) iframe.src = "about:blank";
 
   // video durdur
   if (video) {
-    video.pause();
+    try { video.pause(); } catch {}
     video.removeAttribute("src");
     video.load();
-  }
-
-  // hls.js instance temizle
-  if (window.__hlsInstance) {
-    try { window.__hlsInstance.destroy(); } catch {}
-    window.__hlsInstance = null;
   }
 }
 
@@ -44,38 +48,68 @@ function playHls(url) {
   const iframe = document.getElementById("player");
   if (!video || !iframe) return;
 
+  stopAllPlayers();
+
   // iframe gizle, video göster
   iframe.classList.add("hidden");
   video.classList.remove("hidden");
 
-  stopAllPlayers(); // temiz bir başlangıç
-
-  // Safari iOS/macOS çoğu zaman native oynatır
+  // Safari native HLS
   if (video.canPlayType("application/vnd.apple.mpegurl")) {
     video.src = url;
-    video.play().catch(()=>{});
+    video.play().catch(() => {});
     return;
   }
 
-  // Diğer tarayıcılar: hls.js
+  // Diğerleri: hls.js
   if (window.Hls && window.Hls.isSupported()) {
     const hls = new window.Hls({
       lowLatencyMode: true,
       backBufferLength: 30,
     });
     window.__hlsInstance = hls;
+
     hls.loadSource(url);
     hls.attachMedia(video);
+
     hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-      video.play().catch(()=>{});
+      video.play().catch(() => {});
     });
+
+    // debug: CORS/403 vs burada görünür
+    hls.on(window.Hls.Events.ERROR, (ev, data) => {
+      if (state.debug) console.warn("HLS ERROR:", data);
+    });
+
     return;
   }
 
-  // Destek yoksa
   console.warn("HLS desteklenmiyor:", url);
 }
 
+function playIframe(url) {
+  const iframe = document.getElementById("player");
+  const video = document.getElementById("hlsPlayer");
+  if (!iframe) return;
+
+  stopAllPlayers();
+
+  // video gizle, iframe göster
+  if (video) video.classList.add("hidden");
+  iframe.classList.remove("hidden");
+
+  iframe.src = url || "about:blank";
+}
+
+function playFromItem(item) {
+  const src = buildEmbedUrl(item);
+  if (isHlsUrl(src)) return playHls(src);
+  return playIframe(src);
+}
+
+/* =========================
+   UTILS
+========================= */
 function safeText(s) { return String(s ?? "").trim(); }
 
 function isRowEnabled(v) {
@@ -99,6 +133,9 @@ function toBool(v) {
   return false;
 }
 
+/* =========================
+   PROVIDERS
+========================= */
 function twitchEmbedUrl(channel) {
   const parent = encodeURIComponent(location.hostname);
   return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${parent}&autoplay=true`;
@@ -138,6 +175,10 @@ function b64UrlEncode(str) {
 
 function shouldProxyEmbed(url) {
   const u = String(url || "");
+  // m3u8 kesinlikle proxy yapma (HLS video kendisi çekecek)
+  if (isHlsUrl(u)) return false;
+
+  // html embed sayfaları vs proxylenebilir
   return /trycloudflare\.com/i.test(u) || /\/myplayer\.html/i.test(u) || /\.html(\?|#|$)/i.test(u);
 }
 
@@ -153,10 +194,14 @@ function buildEmbedUrl(item) {
     return youtubeToEmbedUrl(raw);
   }
   if (item.provider === "twitch") return item.twitchChannel ? twitchEmbedUrl(item.twitchChannel) : "";
+
   const raw = item.embedUrl || "";
   return shouldProxyEmbed(raw) ? wrapPlayerProxy(raw) : raw;
 }
 
+/* =========================
+   NORMALIZE + FILTER
+========================= */
 function normalize(item) {
   const rawKind = safeText(item.kind || item.type || "channel").toLowerCase();
   const kind = (rawKind === "match") ? "match" : "channel";
@@ -193,7 +238,9 @@ function filteredList() {
   return list;
 }
 
-/* PREROLL */
+/* =========================
+   PREROLL
+========================= */
 function getPrerollConfig() {
   const cfg = window.HOPGOAL_ADS && window.HOPGOAL_ADS.preroll ? window.HOPGOAL_ADS.preroll : null;
   if (!cfg || !cfg.enabled) return null;
@@ -222,22 +269,18 @@ function stopPreroll() {
 
 function finishPrerollPlay(item) {
   stopPreroll();
-  const src = buildEmbedUrl(item);
-  const playerEl = $("#player");
-  if (playerEl) playerEl.src = src || "about:blank";
+  playFromItem(item);
 }
 
 function startPrerollThenPlay(item) {
   const cfg = getPrerollConfig();
-  const playerEl = $("#player");
   if (!cfg) {
-    const src = buildEmbedUrl(item);
-    if (playerEl) playerEl.src = src || "about:blank";
+    playFromItem(item);
     return;
   }
 
   stopPreroll();
-  if (playerEl) playerEl.src = "about:blank";
+  stopAllPlayers(); // preroll başlamadan her şeyi durdur
 
   const pr = $("#preRoll");
   const img = $("#preRollImg");
@@ -246,8 +289,7 @@ function startPrerollThenPlay(item) {
   const skipBtn = $("#preRollSkip");
 
   if (!pr || !img || !link || !countdown || !skipBtn) {
-    const src = buildEmbedUrl(item);
-    if (playerEl) playerEl.src = src || "about:blank";
+    playFromItem(item);
     return;
   }
 
@@ -276,10 +318,8 @@ function startPrerollThenPlay(item) {
 
   skipBtn.onclick = () => {
     if (skipBtn.disabled) return;
-    confirmSkipAndPlay();
+    finishPrerollPlay(item);
   };
-
-  function confirmSkipAndPlay() { finishPrerollPlay(item); }
 
   state.prerollTimer = setInterval(() => {
     state.prerollRemaining -= 1;
@@ -292,7 +332,9 @@ function startPrerollThenPlay(item) {
   }, 1000);
 }
 
-/* PLAYER SELECT */
+/* =========================
+   PLAYER SELECT
+========================= */
 function setActive(item) {
   state.activeId = item.id;
 
@@ -323,7 +365,9 @@ function setActive(item) {
   render();
 }
 
-/* RENDER */
+/* =========================
+   RENDER
+========================= */
 function render() {
   const list = filteredList();
   const root = $("#list");
@@ -366,7 +410,9 @@ function render() {
   if (empty) empty.classList.toggle("hidden", root.children.length !== 0);
 }
 
-/* TAB */
+/* =========================
+   TAB
+========================= */
 function setTab(tab) {
   state.tab = tab;
   const m = $("#tabMatches");
@@ -384,9 +430,10 @@ function autoPickInitialTab() {
   return "match";
 }
 
-/* LOAD */
+/* =========================
+   LOAD
+========================= */
 async function load() {
-  // önce remote
   const r = await fetch("/api/streams", { cache: "no-store" });
   const j = await r.json();
 
@@ -396,7 +443,7 @@ async function load() {
 
   state.all = streams.map(normalize).filter(x => x.enabled);
 
-  // 🔥 burada otomatik sekme seçiyoruz
+  // otomatik sekme
   setTab(autoPickInitialTab());
 
   // ilk elemanı seç
@@ -406,6 +453,9 @@ async function load() {
   render();
 }
 
+/* =========================
+   PLAYER CHROME AUTO-HIDE
+========================= */
 function setupPlayerChromeAutoHide() {
   const card = document.querySelector(".player-card");
   if (!card) return;
@@ -430,6 +480,9 @@ function setupPlayerChromeAutoHide() {
   reset();
 }
 
+/* =========================
+   WIRE UI
+========================= */
 function wire() {
   const tabM = $("#tabMatches");
   const tabC = $("#tabChannels");
@@ -439,7 +492,6 @@ function wire() {
   const btnClear = $("#btnClear");
   const srcBtn = $("#btnSource");
 
-  // null guard (DOM değişirse script patlamasın)
   if (tabM) tabM.addEventListener("click", () => setTab("match"));
   if (tabC) tabC.addEventListener("click", () => setTab("channel"));
   if (q) q.addEventListener("input", render);
@@ -456,7 +508,16 @@ function wire() {
   if (btnRefresh) btnRefresh.addEventListener("click", () => {
     const current = state.all.find(x => x.id === state.activeId);
     if (!current) return;
+
     const src = buildEmbedUrl(current);
+
+    // m3u8 ise HLS refresh
+    if (isHlsUrl(src)) {
+      playHls(src);
+      return;
+    }
+
+    // iframe refresh
     const player = $("#player");
     if (!player) return;
     player.src = "about:blank";
@@ -466,8 +527,14 @@ function wire() {
   if (btnClear) btnClear.addEventListener("click", () => {
     stopPreroll();
     state.activeId = null;
-    const player = $("#player");
-    if (player) player.src = "about:blank";
+
+    stopAllPlayers();
+
+    const iframe = $("#player");
+    const video = $("#hlsPlayer");
+    if (iframe) iframe.classList.remove("hidden");
+    if (video) video.classList.add("hidden");
+
     const t = $("#pTitle");
     const m = $("#pMeta");
     if (t) t.textContent = "Bir yayın seç";
@@ -477,7 +544,8 @@ function wire() {
 }
 
 wire();
-load().catch(() => {
+load().catch((e) => {
+  if (state.debug) console.warn("load failed:", e);
   const empty = $("#empty");
   if (empty) empty.classList.remove("hidden");
 });
