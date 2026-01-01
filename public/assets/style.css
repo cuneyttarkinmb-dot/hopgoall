@@ -1345,3 +1345,5 @@ a{color:inherit}
   color: rgba(255,255,255,.92);
 }
 
+/* Liste boşken çıkan "Sonuç yok" overlay'i sekmelere tıklamayı engellemesin */
+.empty { pointer-events: none; }
