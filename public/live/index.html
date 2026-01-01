@@ -8,6 +8,7 @@
 </head>
 
 <body>
+
   <!-- BG ADS -->
   <div class="bg-ads" aria-hidden="true">
     <div class="bg-ad bg-left" data-ad-slot="bg_left"></div>
@@ -16,17 +17,20 @@
 
   <!-- HEADER -->
   <header class="topbar">
-    <a class="brand" href="/live" aria-label="HopGoal">
+    <!-- 🔥 ./index.html yerine /live/ koyuyoruz (redirect loop riskini bitirir) -->
+    <a class="brand" href="/live/" aria-label="HopGoal">
       <img class="brand-logo" src="/assets/hopgoal-logo.svg" alt="HopGoal" />
       <span class="brand-text"><b>HopGoal</b><small>Live</small></span>
     </a>
   </header>
 
   <main class="container">
+
     <!-- TOP BANNER -->
     <div class="ad-slot ad-top-banner" data-ad-slot="top_banner"></div>
 
     <div class="layout">
+
       <!-- LEFT PLAYER -->
       <section class="player-card">
         <div class="player-head">
@@ -43,16 +47,23 @@
         </div>
 
         <div class="player-frame">
+
           <!-- PREROLL -->
           <div id="preRoll" class="preroll hidden">
             <div class="preroll-card">
               <div class="preroll-top">
                 <div class="ad-label">Reklam</div>
+
                 <div class="preroll-right">
-                  <div class="preroll-timer"><span id="preRollCountdown">15</span>s</div>
-                  <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>10 sn sonra geç</button>
+                  <div class="preroll-timer">
+                    <span id="preRollCountdown">15</span>s
+                  </div>
+                  <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>
+                    10 sn sonra geç
+                  </button>
                 </div>
               </div>
+
               <a id="preRollClick" class="preroll-body" href="#" target="_blank" rel="sponsored noopener noreferrer">
                 <img id="preRollImg" alt="Reklam" />
               </a>
@@ -70,8 +81,9 @@
         <div class="ad-slot ad-player-banner" data-ad-slot="player_banner"></div>
       </section>
 
-      <!-- RIGHT PANEL -->
+      <!-- RIGHT SIDE -->
       <aside class="side-card">
+
         <section class="popular-card">
           <div class="popular-head">
             <b>Popüler Maçlar</b>
@@ -108,4 +120,46 @@
         </div>
 
         <div class="side-tools">
-          <input id="q"
+          <input id="q" class="input" placeholder="Maç veya kanal ara..." autocomplete="off" />
+          <label class="toggle">
+            <input id="onlyLive" type="checkbox" checked />
+            <span>Sadece canlı</span>
+          </label>
+        </div>
+
+        <div class="ad-slot ad-rect" data-ad-slot="sidebar_rectangle"></div>
+
+        <div id="list" class="list"></div>
+
+        <!-- boş durum: tıklamayı engellemesin diye CSS’te fixliyoruz -->
+        <div id="empty" class="empty hidden">
+          <b>Sonuç yok</b>
+          <div>Sheets’te yayın ekleyip enabled=1 yap.</div>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <!-- FLOATING -->
+  <div id="adFloating" class="ad-floating hidden" data-ad-slot="floating"></div>
+
+  <!-- INTERSTITIAL -->
+  <div id="adInterstitial" class="ad-interstitial hidden">
+    <div id="adInterstitialBackdrop" class="ad-interstitial-backdrop"></div>
+    <div class="ad-interstitial-card">
+      <button id="adInterstitialClose" class="ad-close" type="button" aria-label="Kapat">✕</button>
+      <div class="ad-label">Interstitial</div>
+      <a href="#" target="_blank" rel="sponsored noopener noreferrer">
+        <img src="" alt="Interstitial Reklam">
+      </a>
+    </div>
+  </div>
+
+  <!-- Script sırası -->
+  <script src="/assets/ads.js"></script>
+  <script src="/assets/popular.js"></script>
+  <script src="/assets/standings.js"></script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
