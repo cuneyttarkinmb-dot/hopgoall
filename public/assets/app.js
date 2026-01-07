@@ -133,6 +133,14 @@ function toBool(v) {
   return false;
 }
 
+// ✅ Sheets'ten gelen sayı alanları boş gelebilir
+function toNum(v, def) {
+  const s = String(v ?? "").trim();
+  if (s === "") return def;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : def;
+}
+
 /* =========================
    PROVIDERS
 ========================= */
@@ -200,6 +208,71 @@ function buildEmbedUrl(item) {
 }
 
 /* =========================
+   LOGO OVERLAY (Sheets)
+   - live.html'de: #logoLayer + #logoImg
+   - normal + fullscreen ayrı ayarlar
+========================= */
+function isPlayerFullscreen() {
+  // Fullscreen'e aldığımız element: .player-frame
+  const el = document.fullscreenElement;
+  return !!(el && el.classList && el.classList.contains("player-frame"));
+}
+
+function applyLogo(item) {
+  const layer = document.getElementById("logoLayer");
+  const img = document.getElementById("logoImg");
+  if (!layer || !img) return;
+
+  const hasLogo = item && item.logoUrl && String(item.logoUrl).trim() !== "";
+  if (!hasLogo) {
+    layer.classList.add("hidden");
+    img.src = "";
+    return;
+  }
+
+  const fs = isPlayerFullscreen();
+
+  // fullscreen kolonları doluysa onları kullan, değilse normal
+  const useFs = fs && item.fsLogoPos && String(item.fsLogoPos).trim() !== "";
+
+  const pos = (useFs ? item.fsLogoPos : item.logoPos) || "tr";
+  const x = useFs ? item.fsLogoX : item.logoX;
+  const y = useFs ? item.fsLogoY : item.logoY;
+  const w = useFs ? item.fsLogoW : item.logoW;
+  const op = useFs ? item.fsLogoOpacity : item.logoOpacity;
+
+  img.src = String(item.logoUrl).trim();
+
+  // boyut/opaklık
+  img.style.width = `${toNum(w, 140)}px`;
+  img.style.opacity = String(toNum(op, 1));
+
+  // reset konum
+  img.style.left = "auto";
+  img.style.right = "auto";
+  img.style.top = "auto";
+  img.style.bottom = "auto";
+
+  const xx = toNum(x, 16);
+  const yy = toNum(y, 16);
+
+  // tr / tl / br / bl (default tr)
+  if (pos === "tl") { img.style.left = `${xx}px`; img.style.top = `${yy}px`; }
+  else if (pos === "br") { img.style.right = `${xx}px`; img.style.bottom = `${yy}px`; }
+  else if (pos === "bl") { img.style.left = `${xx}px`; img.style.bottom = `${yy}px`; }
+  else { img.style.right = `${xx}px`; img.style.top = `${yy}px`; }
+
+  layer.classList.remove("hidden");
+}
+
+function clearLogo() {
+  const layer = document.getElementById("logoLayer");
+  const img = document.getElementById("logoImg");
+  if (layer) layer.classList.add("hidden");
+  if (img) img.src = "";
+}
+
+/* =========================
    NORMALIZE + FILTER
 ========================= */
 function normalize(item) {
@@ -219,6 +292,20 @@ function normalize(item) {
     provider: safeText(item.provider || "embed"),
     embedUrl: safeText(item.embedUrl || ""),
     sourceUrl: safeText(item.sourceUrl || ""),
+
+    // ✅ LOGO alanları (Apps Script JSON'undan gelir)
+    logoUrl: safeText(item.logoUrl || ""),
+    logoPos: safeText(item.logoPos || "tr"),
+    logoX: toNum(item.logoX, 16),
+    logoY: toNum(item.logoY, 16),
+    logoW: toNum(item.logoW, 140),
+    logoOpacity: toNum(item.logoOpacity, 1),
+
+    fsLogoPos: safeText(item.fsLogoPos || ""),
+    fsLogoX: toNum(item.fsLogoX, 16),
+    fsLogoY: toNum(item.fsLogoY, 16),
+    fsLogoW: toNum(item.fsLogoW, 140),
+    fsLogoOpacity: toNum(item.fsLogoOpacity, 1),
   };
 }
 
@@ -361,6 +448,9 @@ function setActive(item) {
     }
   }
 
+  // ✅ Logo'yu seçilen kanala göre bas
+  applyLogo(item);
+
   startPrerollThenPlay(item);
   render();
 }
@@ -455,6 +545,8 @@ async function load() {
 
 /* =========================
    PLAYER CHROME AUTO-HIDE
+   - CSS tarafında .player-card.ui-hidden kullanıyorsun,
+     burada da aynı sınıfı basıyoruz.
 ========================= */
 function setupPlayerChromeAutoHide() {
   const card = document.querySelector(".player-card");
@@ -464,11 +556,11 @@ function setupPlayerChromeAutoHide() {
 
   function hide() {
     if (prerollEl && !prerollEl.classList.contains("hidden")) return reset();
-    card.classList.add("chrome-hidden");
+    card.classList.add("ui-hidden");
   }
 
   function reset() {
-    card.classList.remove("chrome-hidden");
+    card.classList.remove("ui-hidden");
     if (state.uiHideTimer) clearTimeout(state.uiHideTimer);
     state.uiHideTimer = setTimeout(hide, 2500);
   }
@@ -488,9 +580,15 @@ function wire() {
   const tabC = $("#tabChannels");
   const q = $("#q");
   const onlyLive = $("#onlyLive");
-  const btnRefresh = $("#btnRefresh");
+
+  // ✅ live.html'de id: btnReload
+  const btnReload = $("#btnReload");
   const btnClear = $("#btnClear");
   const srcBtn = $("#btnSource");
+
+  // ✅ fullscreen butonu
+  const btnFs = $("#btnFullscreen");
+  const frame = document.querySelector(".player-frame");
 
   if (tabM) tabM.addEventListener("click", () => setTab("match"));
   if (tabC) tabC.addEventListener("click", () => setTab("channel"));
@@ -505,7 +603,8 @@ function wire() {
 
   setupPlayerChromeAutoHide();
 
-  if (btnRefresh) btnRefresh.addEventListener("click", () => {
+  // ✅ Reload (m3u8 + iframe)
+  if (btnReload) btnReload.addEventListener("click", () => {
     const current = state.all.find(x => x.id === state.activeId);
     if (!current) return;
 
@@ -524,11 +623,13 @@ function wire() {
     setTimeout(() => { player.src = src || "about:blank"; }, 80);
   });
 
+  // ✅ Clear
   if (btnClear) btnClear.addEventListener("click", () => {
     stopPreroll();
     state.activeId = null;
 
     stopAllPlayers();
+    clearLogo();
 
     const iframe = $("#player");
     const video = $("#hlsPlayer");
@@ -541,6 +642,24 @@ function wire() {
     if (m) m.textContent = "Sağdaki listeden bir maç/kanal seçince burada açılır.";
     render();
   });
+
+  // ✅ Fullscreen: iframe değil, .player-frame tam ekran (logo da beraber gelir)
+  if (btnFs && frame) {
+    btnFs.addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await frame.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch {}
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      const current = state.all.find(x => x.id === state.activeId);
+      if (current) applyLogo(current); // fsLogo* varsa otomatik geçer
+    });
+  }
 }
 
 wire();
