@@ -62,10 +62,7 @@
         </div>
 
         <div class="player-frame">
-            <!-- [LOGO OVERLAY] Player üstü logo katmanı -->
-  <div id="logoLayer" class="logo-layer hidden">
-    <img id="logoImg" class="logo-img" src="" alt="Logo" />
-  </div>
+
           <!-- =========================================================
                [PREROLL ADS] Yayın seçince reklam overlay
                ========================================================= -->
@@ -81,6 +78,21 @@
                   <button id="preRollSkip" class="btn preroll-skip" type="button" disabled>
                     10 sn sonra geç
                   </button>
+                  <!-- =========================================================
+     [IFRAME PLAYER]
+     ========================================================= -->
+<iframe
+  id="player"
+  title="Live player"
+  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+  allowfullscreen
+  src="about:blank"></iframe>
+
+<!-- [LOGO OVERLAY] (HER ŞEYİN ÜSTÜNDE KALSIN DİYE EN ALTA) -->
+<div id="logoLayer" class="logo-layer hidden">
+  <img id="logoImg" class="logo-img" src="" alt="Logo" />
+</div>
+
                 </div>
               </div>
 
