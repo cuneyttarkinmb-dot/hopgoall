@@ -1428,4 +1428,27 @@ a{color:inherit}
   border: 0;
   background: #000;
 }
- 
+ /* =========================
+   LOGO OVERLAY (Player üstü)
+========================= */
+.player-frame { position: relative; }
+
+.logo-layer{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  pointer-events:none;
+}
+
+.logo-img{
+  position:absolute;
+  display:block;
+  width:140px;              /* default */
+  height:auto;
+  opacity:1;                /* default */
+  background:#000;          /* alttaki görüntü görünmesin */
+  padding:6px 10px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+
