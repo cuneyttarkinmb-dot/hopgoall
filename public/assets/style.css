@@ -1428,17 +1428,20 @@ a{color:inherit}
   border: 0;
   background: #000;
 }
- /* =========================
-   LOGO OVERLAY (Player üstü)
-========================= */
-/* ===== Logo Overlay ===== */
+/* ===== Logo Overlay (IFRAME ÜSTÜNDE GARANTİ) ===== */
 .player-frame { position: relative; }
+
+.player-frame iframe,
+.player-frame video {
+  position: relative;
+  z-index: 1;
+}
 
 .logo-layer{
   position:absolute;
   inset:0;
-  z-index: 99999;        /* iframe/video üstünde kesin dursun */
-  pointer-events:none;   /* tıklamayı engellemesin */
+  z-index: 999999;       /* iframe üstü */
+  pointer-events:none;
 }
 
 .logo-img{
@@ -1447,11 +1450,11 @@ a{color:inherit}
   user-select:none;
   -webkit-user-drag:none;
 
-  /* 🔥 “arkası görünmesin” isteğin için */
+  /* arkası görünmesin */
   background: rgba(3, 10, 25, 0.92);
   padding: 6px 10px;
   border-radius: 10px;
 }
 
-/* projede yoksa */
 .hidden { display:none !important; }
+
