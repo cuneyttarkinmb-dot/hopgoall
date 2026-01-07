@@ -262,6 +262,15 @@ a{color:inherit}
 .player-title{font-weight:800;font-size:16px}
 .player-meta{color:var(--muted);font-size:13px;margin-top:4px}
 .player-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+/* Player UI auto-hide (mouse hareket edince geri gelir) */
+.player-card.ui-hidden .player-actions{
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+.player-actions{
+  transition: opacity .25s ease, transform .25s ease;
+}
 .player-head{transition: opacity .22s ease, transform .22s ease;}
 .player-card.chrome-hidden .player-head{
   opacity: 0;
