@@ -1,5 +1,5 @@
 "use strict";
-
+ 
 const $ = (s) => document.querySelector(s);
 
 const state = {
