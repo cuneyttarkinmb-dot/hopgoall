@@ -1437,7 +1437,7 @@ a{color:inherit}
 .logo-layer{
   position:absolute;
   inset:0;
-  z-index: 9999;         /* iframe'in üstünde dursun */
+  z-index: 99999;        /* iframe/video üstünde kesin dursun */
   pointer-events:none;   /* tıklamayı engellemesin */
 }
 
@@ -1446,7 +1446,12 @@ a{color:inherit}
   height:auto;
   user-select:none;
   -webkit-user-drag:none;
+
+  /* 🔥 “arkası görünmesin” isteğin için */
+  background: rgba(3, 10, 25, 0.92);
+  padding: 6px 10px;
+  border-radius: 10px;
 }
 
-/* Eğer projende .hidden yoksa bu şart */
-.hidden { display: none !important; }
+/* projede yoksa */
+.hidden { display:none !important; }
