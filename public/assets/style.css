@@ -722,7 +722,47 @@ a{color:inherit}
    - Süre bitince video açılır
    - Son 5 sn “Geç” aktif olur
    ========================================================= */
-.player-frame{ position: relative; }
+.player-frame{
+  position: relative;
+  overflow: hidden;
+}
+
+/* [LOGO OVERLAY] */
+.logo-layer{
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 8px;
+  border-radius: 12px;
+
+  /* ✅ Logo altında video görünmesin diye opak bir panel */
+  background: rgba(0,0,0,.75);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+
+  opacity: var(--logo-opacity, 1);
+}
+.logo-layer.hidden{ display: none; }
+
+.logo-img{
+  width: var(--logo-w, 140px);
+  height: auto;
+  display: block;
+}
+
+/* Konumlar */
+.logo-layer[data-pos="tr"]{ top: var(--logo-y, 12px); right: var(--logo-x, 12px); }
+.logo-layer[data-pos="tl"]{ top: var(--logo-y, 12px); left:  var(--logo-x, 12px); }
+.logo-layer[data-pos="br"]{ bottom: var(--logo-y, 12px); right: var(--logo-x, 12px); }
+.logo-layer[data-pos="bl"]{ bottom: var(--logo-y, 12px); left:  var(--logo-x, 12px); }
+.logo-layer[data-pos="c"]{
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
 
 .preroll{
   position: absolute;
